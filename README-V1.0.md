@@ -17,3 +17,9 @@
 
 ## Honest limitations
 This is a foundation patch, not a full trained AI installation. Smart Enhance uses classical local image processing; it is not a neural-network model. OCR is not implemented because no OCR engine/model files are bundled. The current preview/export pipeline may redraw from original page data when rerendered, so treat the Smart Enhance preview as experimental and verify exported output before relying on it. OpenCV removal means the existing detector will use its heuristic fallback. Test camera, crop, PDF/JPG and Airplane Mode on iPhone before treating the app as production-ready.
+
+
+## Upload order / caution
+This ZIP includes a replacement `index.html` that already loads `ai-tools.js`.
+Upload `index.html`, `ai-tools.js`, `sw.js`, and `manifest.webmanifest` to the ROOT of the repository, replacing files with the same names. Do not delete `app.js`, `styles.css`, or `icon.svg`; they are still required and are intentionally not included as replacements.
+The Smart Image Lab feature is experimental and currently changes the preview canvas only; it is not yet integrated safely into the original page data/export pipeline. Test before relying on its output.
