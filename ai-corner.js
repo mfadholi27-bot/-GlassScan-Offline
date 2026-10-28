@@ -61,8 +61,19 @@
     button.dataset.gsAiBound = '1';
     button.disabled = false;
     button.textContent = '✦ Deteksi sudut AI';
-    button.title = 'Gunakan model AI lokal setelah model berhasil dimuat; jika gagal, gunakan deteksi klasik.';
-    button.onclick = async () => {
+    button.title = 'Gunakan model AI lokal; jika gagal, gunakan deteksi klasik.';
+    // Install a native click listener rather than assigning onclick, so other UI scripts
+    // cannot silently replace the AI handler. Reset disabled state when crop dialog opens.
+    const cropDialog = document.getElementById('cropDialog');
+    if (cropDialog && 'MutationObserver' in window) {
+      new MutationObserver(() => {
+        if (cropDialog.open) {
+          button.disabled = false;
+          if (!button.textContent.includes('AI') && !button.textContent.includes('Unduh')) button.textContent = '✦ Deteksi sudut AI';
+        }
+      }).observe(cropDialog, {attributes:true, attributeFilter:['open']});
+    }
+    button.addEventListener('click', async () => {
       if (!window.cropImage) {
         // cropImage is a top-level lexical binding in app.js, not necessarily a window property.
       }
@@ -114,7 +125,7 @@
       } finally {
         setButtonBusy(false, '✦ Deteksi sudut AI');
       }
-    };
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
