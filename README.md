@@ -1,10 +1,10 @@
 # GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V1.8.0 · GS-180
-- Change timestamp shown in app: 28 Oktober 2026, 20:20 WIB
+- Version: V1.8.1 · GS-181
+- Change timestamp shown in app: 28 Oktober 2026, 20:25 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v180-fixed-frame-guide-cache`
+- Service-worker cache: `glassscan-v181-instant-guide-crop-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
@@ -41,3 +41,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Live camera now shows a stable guide frame rather than drawing unstable detected corners over the preview.
 - Captured camera images are not automatically perspective-warped based on uncertain live detection. Review and adjust the four corners in the crop editor before applying.
 - This reduces false corner overlays but does not claim CamScanner-equivalent automatic detection. Test on physical iPhone/Android devices and patterned backgrounds before release.
+
+
+### GS-181 — Instant guide crop and Magic Color (28 Oktober 2026, 20:25 WIB)
+- Camera capture maps the fixed on-screen guide rectangle to source-video coordinates while accounting for `object-fit: cover`, then immediately crops to that rectangle.
+- Magic Color is selected automatically after capture.
+- Perspective correction still requires checking/adjusting the four corners in the crop editor; fixed-frame cropping is not document-edge detection.
+- JavaScript syntax checked; physical-device crop alignment still requires testing on iPhone and Android.
