@@ -1,0 +1,15 @@
+GlassScan v0.9 Offline-first patch
+=================================
+
+Files to replace:
+- sw.js
+- manifest.webmanifest
+
+Manual edit:
+- index.html: remove only the external OpenCV script tag:
+  <script async src="https://docs.opencv.org/4.13.0/opencv.js" id="opencvScript"></script>
+- Keep this line:
+  <script src="app.js"></script>
+
+Then commit changes to GitHub Pages and test after one successful online load.
+See README-V0.9.md for full steps and limitations.
