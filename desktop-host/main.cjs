@@ -50,10 +50,11 @@ async function getClient() {
 
 function safeError(error) {
   const message = String(error && error.message || 'Terjadi kesalahan. Coba lagi.');
-  if (/sharing|scope|permission|usage|limit/i.test(message)) return message.slice(0, 500);
+  if (/sharing|scope|permission/i.test(message)) return 'Izin penggunaan paket ChatGPT belum diberikan. Periksa persetujuan akun dan coba lagi.';
+  if (/limit|quota|rate/i.test(message)) return 'Batas penggunaan tercapai atau permintaan dibatasi. Periksa pengaturan penggunaan ChatGPT.';
   if (/sign.?in|auth|token|credential|profile/i.test(message)) return 'Autentikasi belum selesai atau perlu diulang. Periksa jendela browser dan coba hubungkan kembali.';
   if (/encryption|storage/i.test(message)) return 'Penyimpanan kredensial aman tidak tersedia. Login dibatalkan demi keamanan.';
-  return message.slice(0, 300);
+  return 'Permintaan gagal. Periksa koneksi dan coba lagi. Detail teknis tidak ditampilkan untuk melindungi data akun.';
 }
 
 function validateSender(event) {
