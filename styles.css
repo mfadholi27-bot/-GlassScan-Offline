@@ -128,3 +128,6 @@ footer{font-size:11px;line-height:1.6}
 
 /* GS-184: clearer 200% scanner-effect range */
 .effect-control-head output{font-variant-numeric:tabular-nums}.effect-scale span:last-child{color:#7cefd4;font-weight:700}
+
+/* GS-186 custom premium scanner filter */
+.sample.scanpro{color:#fff;background:linear-gradient(135deg,#175fbe,#103b82);font-size:20px;border-color:#8dc4ff;position:relative;overflow:hidden}.sample.scanpro:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 5px,#ffffff45 5px 7px);pointer-events:none}
