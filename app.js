@@ -116,12 +116,20 @@ function detectQuadHeuristic(source){
 
 
 function orderQuad(points){
-  const sum=points.map(p=>p[0]+p[1]),diff=points.map(p=>p[0]-p[1]);
-  const tl=points[sum.indexOf(Math.min(...sum))],br=points[sum.indexOf(Math.max(...sum))],
-        tr=points[diff.indexOf(Math.max(...diff))],bl=points[diff.indexOf(Math.min(...diff))];
-  const q=[tl,tr,br,bl];
-  if(new Set(q.map(p=>p.join(','))).size!==4)return null;
-  return q;
+ if(!Array.isArray(points)||points.length!==4||points.some(p=>!p||!Number.isFinite(p[0])||!Number.isFinite(p[1])))return null;
+ const cx=points.reduce((s,p)=>s+p[0],0)/4,cy=points.reduce((s,p)=>s+p[1],0)/4;
+ // In canvas coordinates, ascending angle around the centroid yields a consistent perimeter order.
+ const ring=points.map(p=>[p[0],p[1]]).sort((a,b)=>Math.atan2(a[1]-cy,a[0]-cx)-Math.atan2(b[1]-cy,b[0]-cx));
+ // Start at the point nearest the top-left diagonal; then keep perimeter order.
+ let first=0,best=Infinity;
+ ring.forEach((p,i)=>{const s=p[0]+p[1];if(s<best){best=s;first=i}});
+ let q=ring.slice(first).concat(ring.slice(0,first));
+ const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+ const cs=q.map((p,i)=>cross(p,q[(i+1)%4],q[(i+2)%4]));
+ if(cs.some(v=>Math.abs(v)<1)||!(cs.every(v=>v>0)||cs.every(v=>v<0)))return null;
+ // Ensure the first edge generally heads rightwards; otherwise reverse perimeter direction.
+ if(q[1][0]<q[3][0])q=[q[0],q[3],q[2],q[1]];
+ return q;
 }
 function detectQuadOpenCV(source){
   if(!window.cv || !cv.Mat || !cv.findContours || !cv.Canny) return null;
@@ -201,7 +209,41 @@ async function capture(){const v=$('video');if(!stream||!v.videoWidth){toast('Ka
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
 function perspectiveWarp(src,q){const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);const W=Math.max(1,Math.round(Math.max(dist(q[0],q[1]),dist(q[3],q[2])))),H=Math.max(1,Math.round(Math.max(dist(q[0],q[3]),dist(q[1],q[2]))));const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height;const dst=[[0,0],[W-1,0],[W-1,H-1],[0,H-1]],A=[],b=[];for(let i=0;i<4;i++){const [x,y]=dst[i],[u,v]=q[i];A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}const h=solve(A,b),out=document.createElement('canvas');const scale=Math.min(1,2600/Math.max(W,H));out.width=Math.max(1,Math.round(W*scale));out.height=Math.max(1,Math.round(H*scale));const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(src,0,0,sw,sh);const im=oc.getImageData(0,0,out.width,out.height),srcData=im.data;const input=document.createElement('canvas');input.width=sw;input.height=sh;const ix=input.getContext('2d',{willReadFrequently:true});ix.drawImage(src,0,0,sw,sh);const id=ix.getImageData(0,0,sw,sh).data;for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++){const X=x/scale,Y=y/scale,den=h[6]*X+h[7]*Y+1,u=(h[0]*X+h[1]*Y+h[2])/den,v=(h[3]*X+h[4]*Y+h[5])/den,tx=(y*out.width+x)*4;if(u<0||v<0||u>=sw-1||v>=sh-1){srcData[tx]=srcData[tx+1]=srcData[tx+2]=255;srcData[tx+3]=255;continue}const x0=Math.floor(u),y0=Math.floor(v),fx=u-x0,fy=v-y0;for(let ch=0;ch<3;ch++){const a=id[(y0*sw+x0)*4+ch],bb=id[(y0*sw+x0+1)*4+ch],cc=id[((y0+1)*sw+x0)*4+ch],dd=id[((y0+1)*sw+x0+1)*4+ch];srcData[tx+ch]=(a*(1-fx)+bb*fx)*(1-fy)+(cc*(1-fx)+dd*fx)*fy}srcData[tx+3]=255}oc.putImageData(im,0,0);return out.toDataURL('image/jpeg',.97)}
-function syncFilter(){document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter))}async function render(){const has=active>=0&&pages[active];$('emptyState').hidden=!!has;$('previewWrap').hidden=!has;$('previewActions').hidden=!has;$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length;if(!has){$('previewTitle').textContent='Belum ada dokumen';$('thumbs').innerHTML='';return}const img=await loadImage(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();if(filter!=='original')applyFilter(ctx,canvas.width,canvas.height,filter);$('previewTitle').textContent=pages[active].name;drawThumbs()}
+function syncFilter(){document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter))}function analyzeDocumentQuality(source){
+ const w=source.naturalWidth||source.videoWidth||source.width,h=source.naturalHeight||source.videoHeight||source.height;
+ if(!w||!h)return {score:0,blur:0,brightness:0,dark:0,glare:0,tips:['Gambar belum siap dianalisis.']};
+ const sw=240,sh=Math.max(120,Math.round(sw*h/w)),c=document.createElement('canvas');c.width=sw;c.height=sh;
+ const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(source,0,0,sw,sh);
+ const data=g.getImageData(0,0,sw,sh).data,n=sw*sh,gray=new Float32Array(n);let sum=0,dark=0,glare=0;
+ for(let i=0,p=0;i<data.length;i+=4,p++){const y=.299*data[i]+.587*data[i+1]+.114*data[i+2];gray[p]=y;sum+=y;if(y<45)dark++;if(y>248)glare++}
+ const brightness=sum/n;let lapSum=0,lapSq=0,count=0;
+ for(let y=1;y<sh-1;y++)for(let x=1;x<sw-1;x++){const p=y*sw+x,l=gray[p-1]+gray[p+1]+gray[p-sw]+gray[p+sw]-4*gray[p];lapSum+=l;lapSq+=l*l;count++}
+ const mean=lapSum/(count||1),blur=Math.max(0,lapSq/(count||1)-mean*mean);
+ const tips=[];
+ if(blur<110)tips.push('Foto mungkin buram; dekatkan kamera dan tahan tangan tetap.');
+ if(brightness<78)tips.push('Dokumen terlalu gelap; tambah cahaya tanpa membuat pantulan.');
+ if(brightness>220||glare/n>.12)tips.push('Ada area terlalu terang; ubah sudut terhadap lampu.');
+ if(dark/n>.30)tips.push('Banyak area gelap; pastikan latar dan bayangan tidak menutupi teks.');
+ if(!tips.length)tips.push('Indikator dasar terlihat cukup baik. Periksa teks, tepi, dan detail kecil secara manual.');
+ const blurScore=Math.max(0,Math.min(100,(blur/500)*100));
+ const lightScore=Math.max(0,100-Math.abs(brightness-155)*.72-(glare/n)*180-(dark/n)*80);
+ const score=Math.round(Math.max(0,Math.min(100,blurScore*.55+lightScore*.45)));
+ return {score,blur:Math.round(blur),brightness:Math.round(brightness),dark:Math.round(dark/n*100),glare:Math.round(glare/n*100),tips};
+}
+function showQualityPanel(metrics){
+ let panel=document.getElementById('gsQualityPanel');
+ if(!panel){panel=document.createElement('section');panel.id='gsQualityPanel';panel.style.cssText='margin:12px 0;padding:12px 14px;border:1px solid #ffffff20;border-radius:14px;background:#0c1b2b;color:#eaf4ff;font-size:12px;line-height:1.55';const anchor=$('previewActions');anchor.insertAdjacentElement('afterend',panel)}
+ panel.hidden=false;panel.replaceChildren();
+ const head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap';
+ const title=document.createElement('strong');title.textContent='Pemeriksaan kualitas foto (indikatif)';
+ const score=document.createElement('span');score.textContent='Skor indikatif '+metrics.score+'/100';score.style.cssText='font-weight:700;color:'+(metrics.score>=70?'#8df5c8':metrics.score>=45?'#ffe09a':'#ffaaa8');
+ head.append(title,score);panel.appendChild(head);
+ const detail=document.createElement('div');detail.style.cssText='margin-top:5px;color:#b7c9df';detail.textContent='Ketajaman: '+metrics.blur+' · Terang: '+metrics.brightness+'/255 · Area gelap: '+metrics.dark+'% · Sorotan terang: '+metrics.glare+'%';panel.appendChild(detail);
+ const list=document.createElement('ul');list.style.cssText='margin:7px 0 0;padding-left:18px';
+ metrics.tips.forEach(t=>{const li=document.createElement('li');li.textContent=t;list.appendChild(li)});panel.appendChild(list);
+ const note=document.createElement('div');note.style.cssText='margin-top:6px;color:#91a7c1';note.textContent='Ini pemeriksaan heuristik, bukan jaminan mutu atau pengganti pemeriksaan visual.';panel.appendChild(note);
+}
+async function render(){const has=active>=0&&pages[active];$('emptyState').hidden=!!has;$('previewWrap').hidden=!has;$('previewActions').hidden=!has;$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length;if(!has){$('previewTitle').textContent='Belum ada dokumen';$('thumbs').innerHTML='';const qp=document.getElementById('gsQualityPanel');if(qp)qp.hidden=true;return}const img=await loadImage(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();const quality=analyzeDocumentQuality(canvas);showQualityPanel(quality);if(filter!=='original')applyFilter(ctx,canvas.width,canvas.height,filter);$('previewTitle').textContent=pages[active].name;drawThumbs()}
 function applyFilter(c,w,h,mode){
  if(mode==='original')return;
  const im=c.getImageData(0,0,w,h),d=im.data,n=w*h;
