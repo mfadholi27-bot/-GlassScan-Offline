@@ -1,5 +1,5 @@
 /* GlassScan V1.6 offline cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v168-scan-engine';
+const CACHE_NAME = 'glassscan-v170-release-stamp';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
  './site-updates.js','./ui-polish.js','./manifest.webmanifest',
