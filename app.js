@@ -65,7 +65,7 @@ async function dewarpPageByTextLines(image){
  const pixels=pg.getImageData(0,0,sw,sh).data,gray=new Uint8Array(sw*sh),rowInk=new Float32Array(sh);
  for(let y=0,p=0;y<sh;y++)for(let x=0;x<sw;x++,p++){
   const i=p*4,v=.299*pixels[i]+.587*pixels[i+1]+.114*pixels[i+2];gray[p]=v;
-  if(v<Math.min(175,Math.max(95,v-35)))rowInk[y]++;
+  if(v<170)rowInk[y]++;
  }
  function smooth1(a,r){const out=new Float32Array(a.length);for(let i=0;i<a.length;i++){let s=0,n=0;for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++){s+=a[j];n++}out[i]=s/n}return out}
  const proj=smooth1(rowInk,2),peak=Math.max(...proj),threshold=Math.max(2,sw*.004);
