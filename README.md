@@ -48,3 +48,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - This remains a heuristic detector: stacked documents, low contrast, glare, and complex backgrounds still require real-photo validation and manual corner adjustment when uncertain.
 - No cloud API was added. Local scan, crop, filter, and export paths are retained.
 - Validation status: source-level change reviewed; target-device visual regression tests have not yet been performed.
+
+
+### GS-198 — Ratakan Kertas (prototipe lokal)
+- Adds experimental text-line curvature correction using classical image analysis in the browser; no image upload or paid AI API.
+- The tool estimates text-line curvature and applies a bounded vertical remap. It is not CamScanner's proprietary algorithm or equivalent to a trained neural dewarping model.
+- Keeps the pre-correction image available through **Batalkan perataan**. If confidence is low, it refuses to change the image.
+- Required validation: test curved book pages, flat pages, sparse text, tables, colored pages, and signatures on iPhone Safari and Android Chrome; inspect for stretched/cut text before exporting.
