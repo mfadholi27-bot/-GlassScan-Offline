@@ -1,8 +1,8 @@
 /* GlassScan V1.8.9 feedback and adaptive offline scanner cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v189-feedback-adaptive-cache';
+const CACHE_NAME = 'glassscan-v190-ai-corner-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
- './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
+ './','./index.html','./styles.css','./app.js','./ai-corner.js','./ai-tools.js','./local-ai.js',
  './site-updates.js','./ui-polish.js','./manifest.webmanifest',
  './vendor/tesseract/tesseract.min.js','./vendor/tesseract/worker.min.js',
  './vendor/tesseract-core/tesseract-core.wasm.js','./vendor/tesseract-core/tesseract-core.wasm',
@@ -47,7 +47,8 @@ self.addEventListener('fetch', event => {
  if (request.method !== 'GET') return;
  const url = new URL(request.url);
  const isOpenCV = url.href === OPENCV_URL;
- if (url.origin !== self.location.origin && !isOpenCV) return;
+ const isQuadscanAsset = url.origin === 'https://cdn.jsdelivr.net' && (url.pathname.includes('/npm/quadscan@1.0.0/') || url.pathname.includes('/npm/onnxruntime-web@1.20.1/'));
+ if (url.origin !== self.location.origin && !isOpenCV && !isQuadscanAsset) return;
  event.respondWith((async () => {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request, {ignoreSearch:true}) || (isOpenCV ? await cache.match(OPENCV_URL) : null);
