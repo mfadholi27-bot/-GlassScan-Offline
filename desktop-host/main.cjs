@@ -37,6 +37,7 @@ async function getClient() {
     appName: 'GlassScan Desktop',
     appId: 'glassscan-desktop',
     redirectPort: 0,
+    sendHostId: true,
     storageDir: path.join(app.getPath('userData'), 'chatgpt'),
     credentialEncryption: credentialEncryption(),
     openBrowser: async (url) => {
