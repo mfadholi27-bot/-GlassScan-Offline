@@ -140,3 +140,6 @@ footer{font-size:11px;line-height:1.6}
 @keyframes gsCaptureFlash{from{opacity:.9}to{opacity:0}}
 #captureBtn.gs-capture-pulse{transform:scale(.96);filter:brightness(1.45);transition:transform .08s ease,filter .12s ease}
 @media(prefers-reduced-motion:reduce){.camera-stage.gs-capture-flash::after{animation:none;opacity:.55}}
+
+/* Magic Color Pro: distinct premium filter chip */
+.filter[data-filter="magicpro"]{border-color:#65e6d85c;background:linear-gradient(135deg,rgba(40,190,164,.10),rgba(120,130,255,.10))}.filter[data-filter="magicpro"].active{border-color:#67f0d2;box-shadow:0 0 0 1px #67f0d225,0 7px 22px #45d8c014}.filter[data-filter="magicpro"] .sample{color:#70f1d3;background:linear-gradient(135deg,#173c4a,#24385d)}
