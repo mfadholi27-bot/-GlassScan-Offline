@@ -231,8 +231,8 @@ function applyFilter(c,w,h,mode){
    if(mode==='shadow'){
     // Divide by the estimated illumination field gently; preserve dark ink instead
     // of multiplying every pixel by a large global gain.
-    const target=Math.max(.78,Math.min(1.65,190/bg)),gain=Math.pow(target,.72);
-    d[i]=clamp(190+(r-bg)*gain);d[i+1]=clamp(190+(g-bg)*gain);d[i+2]=clamp(190+(b-bg)*gain);
+    const target=Math.max(.82,Math.min(1.34,205/bg)),gain=Math.pow(target,.82);
+    d[i]=clamp(r*gain);d[i+1]=clamp(g*gain);d[i+2]=clamp(b*gain);
    }else if(mode==='enhance'){
     const gain=1.28,offset=8;d[i]=clamp((r-128)*gain+128+offset);d[i+1]=clamp((g-128)*gain+128+offset);d[i+2]=clamp((b-128)*gain+128+offset);
    }else{
@@ -242,6 +242,8 @@ function applyFilter(c,w,h,mode){
    }
   }
  }
+ // Commit the corrected pixels before generating the blur reference for the unsharp mask.
+ c.putImageData(im,0,0);
  // Mild unsharp mask for text clarity, only on the enhanced/magic result. Blend against
  // a small blurred copy so fine text gains edge definition without hard thresholding.
  if(mode==='enhance'||mode==='magic'){
