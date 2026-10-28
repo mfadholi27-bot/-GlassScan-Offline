@@ -41,3 +41,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Live camera now shows a fixed guide frame rather than drawing unstable detected corners over the preview.
 - Captured camera images are not automatically perspective-warped based on uncertain live detection. Review and adjust the four corners in the crop editor before applying.
 - This reduces false corner overlays but does not claim CamScanner-equivalent automatic detection. Test on physical iPhone/Android devices and patterned backgrounds before release.
+
+### GS-197 — Multi-stage local corner detection (29 Oktober 2026, 01:15 WIB)
+- OpenCV contour detection now evaluates three Canny threshold pairs and closes small edge gaps before contour extraction.
+- Candidate scoring considers opposite-side consistency, corner geometry, page area, and center position instead of relying on a single threshold pass.
+- This remains a heuristic detector: stacked documents, low contrast, glare, and complex backgrounds still require real-photo validation and manual corner adjustment when uncertain.
+- No cloud API was added. Local scan, crop, filter, and export paths are retained.
+- Validation status: source-level change reviewed; target-device visual regression tests have not yet been performed.

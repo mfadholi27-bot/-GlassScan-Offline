@@ -138,43 +138,89 @@ function orderQuad(points){
 }
 function detectQuadOpenCV(source){
   if(!window.cv || !cv.Mat || !cv.findContours || !cv.Canny) return null;
-  let src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
+  let src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null,kernel=null;
   try{
-    const w=source.videoWidth||source.naturalWidth||source.width,h=source.videoHeight||source.naturalHeight||source.height;
+    const w=source.videoWidth||source.naturalWidth||source.width;
+    const h=source.videoHeight||source.naturalHeight||source.height;
     if(!w||!h)return null;
-    const sw=480,sh=Math.max(240,Math.round(sw*h/w)),c=document.createElement('canvas');c.width=sw;c.height=sh;
+    // Analyze a bounded preview for speed, but map selected corners back to source pixels.
+    const sw=560,sh=Math.max(280,Math.round(sw*h/w)),c=document.createElement('canvas');
+    c.width=sw;c.height=sh;
     c.getContext('2d',{willReadFrequently:true}).drawImage(source,0,0,sw,sh);
-    src=cv.imread(c);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
-    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);cv.Canny(blur,edges,45,135);
-    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));cv.dilate(edges,edges,kernel);kernel.delete();
-    contours=new cv.MatVector();hierarchy=new cv.Mat();cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
-    const frameArea=sw*sh,center=[sw/2,sh/2],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);let best=null,bestScore=-Infinity;
-    for(let i=0;i<contours.size();i++){
-      const cnt=contours.get(i),peri=cv.arcLength(cnt,true),area=Math.abs(cv.contourArea(cnt));
-      if(area<frameArea*.07||area>frameArea*.88){cnt.delete();continue}
-      for(const eps of [.012,.018,.024,.032]){
-        const approx=new cv.Mat();cv.approxPolyDP(cnt,approx,eps*peri,true);
-        if(approx.rows===4&&cv.isContourConvex(approx)){
-          const raw=[];for(let j=0;j<4;j++)raw.push([approx.intAt(j,0),approx.intAt(j,1)]);
-          const q=orderQuad(raw);
-          if(q){
-            const s=q.map((p,j)=>dist(p,q[(j+1)%4])),wq=(s[0]+s[2])/2,hq=(s[1]+s[3])/2,aspect=Math.min(wq,hq)/Math.max(wq,hq);
-            const parallel=(Math.min(s[0],s[2])/Math.max(s[0],s[2]))*(Math.min(s[1],s[3])/Math.max(s[1],s[3]));
-            const cx=q.reduce((v,p)=>v+p[0],0)/4,cy=q.reduce((v,p)=>v+p[1],0)/4,centerPenalty=Math.min(1,Math.hypot(cx-center[0],cy-center[1])/Math.hypot(center[0],center[1]));
-            if(aspect>=.24&&parallel>.30){
-              const ratio=area/frameArea,areaPreference=1-Math.min(1,Math.abs(ratio-.34)/.55);
-              const score=areaPreference*2+parallel*1.8+(1-centerPenalty)*.65-Math.abs(aspect-.68)*.35;
-              if(score>bestScore){bestScore=score;best=q.map(p=>[p[0]*w/sw,p[1]*h/sh])}
-            }
-          }
-        }
-        approx.delete();
+    src=cv.imread(c);gray=new cv.Mat();blur=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
+    const frameArea=sw*sh,center=[sw/2,sh/2];
+    const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+    const polyArea=q=>Math.abs(q.reduce((sum,p,i)=>sum+p[0]*q[(i+1)%4][1]-p[1]*q[(i+1)%4][0],0)/2);
+    const cornerQuality=q=>{
+      let total=0;
+      for(let i=0;i<4;i++){
+        const a=q[(i+3)%4],b=q[i],d=q[(i+1)%4];
+        const ux=a[0]-b[0],uy=a[1]-b[1],vx=d[0]-b[0],vy=d[1]-b[1];
+        const den=Math.hypot(ux,uy)*Math.hypot(vx,vy);
+        if(den<1)return 0;
+        // A little perspective is normal; penalize collapsed/needle-like corners only.
+        const cosine=Math.abs((ux*vx+uy*vy)/den);
+        total+=1-Math.max(0,cosine-.28)/.72;
       }
-      cnt.delete();
+      return total/4;
+    };
+    let best=null,bestScore=-Infinity;
+    // Several Canny levels help with both low-contrast paper and strong/complex backgrounds.
+    // Keep the strongest valid candidate; never accept a degenerate/self-crossing quadrilateral.
+    for(const [low,high] of [[28,84],[42,126],[60,180]]){
+      edges=new cv.Mat();
+      cv.Canny(blur,edges,low,high);
+      kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+      cv.morphologyEx(edges,edges,cv.MORPH_CLOSE,kernel);
+      contours=new cv.MatVector();hierarchy=new cv.Mat();
+      cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+      for(let i=0;i<contours.size();i++){
+        const cnt=contours.get(i);
+        try{
+          const peri=cv.arcLength(cnt,true),area=Math.abs(cv.contourArea(cnt));
+          if(peri<frameArea*.08||area<frameArea*.045||area>frameArea*.94)continue;
+          for(const eps of [.010,.016,.022,.030,.040]){
+            const approx=new cv.Mat();
+            try{
+              cv.approxPolyDP(cnt,approx,eps*peri,true);
+              if(approx.rows!==4||!cv.isContourConvex(approx))continue;
+              const raw=[];
+              for(let j=0;j<4;j++)raw.push([approx.intAt(j,0),approx.intAt(j,1)]);
+              const q=orderQuad(raw);
+              if(!q)continue;
+              const side=q.map((p,j)=>dist(p,q[(j+1)%4]));
+              if(side.some(v=>v<Math.min(sw,sh)*.045))continue;
+              const width=(side[0]+side[2])/2,height=(side[1]+side[3])/2;
+              const aspect=Math.min(width,height)/Math.max(width,height);
+              if(aspect<.22||aspect>.99)continue;
+              const parallel=(Math.min(side[0],side[2])/Math.max(side[0],side[2]))*
+                             (Math.min(side[1],side[3])/Math.max(side[1],side[3]));
+              const qa=polyArea(q),ratio=qa/frameArea;
+              if(ratio<.055||ratio>.94)continue;
+              const cx=q.reduce((v,p)=>v+p[0],0)/4,cy=q.reduce((v,p)=>v+p[1],0)/4;
+              const centerPenalty=Math.min(1,Math.hypot(cx-center[0],cy-center[1])/Math.hypot(center[0],center[1]));
+              const areaPreference=1-Math.min(1,Math.abs(Math.log(Math.max(.01,ratio)/.38))/2.8);
+              const sideBalance=parallel;
+              const corners=cornerQuality(q);
+              // Avoid blindly choosing the largest contour: balance size, opposite-side consistency,
+              // plausible corners, and centrality. This is a heuristic, so manual adjustment remains available.
+              const score=areaPreference*1.15+sideBalance*1.7+corners*1.15+(1-centerPenalty)*.35;
+              if(score>bestScore){
+                bestScore=score;
+                best=q.map(p=>[p[0]*w/sw,p[1]*h/sh]);
+              }
+            }finally{approx.delete()}
+          }
+        }finally{cnt.delete()}
+      }
+      [edges,contours,hierarchy,kernel].forEach(m=>{try{if(m)m.delete()}catch(e){}});
+      edges=contours=hierarchy=kernel=null;
     }
     return best;
-  }catch(e){console.warn('OpenCV detect failed',e);return null}
-  finally{[src,gray,blur,edges,contours,hierarchy].forEach(m=>{try{if(m)m.delete()}catch(e){}})}
+  }catch(e){console.warn('OpenCV multi-stage detect failed',e);return null}
+  finally{[src,gray,blur,edges,contours,hierarchy,kernel].forEach(m=>{try{if(m)m.delete()}catch(e){}})}
 }
 function detectQuad(source){
   // OpenCV contour detection first. Use heuristic fallback only when OpenCV is not ready
