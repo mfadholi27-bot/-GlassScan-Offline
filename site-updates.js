@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.2 · GS-182',
-  updatedAt: '28 Oktober 2026, 20:35 WIB',
+  version: 'V1.8.3 · GS-183',
+  updatedAt: '28 Oktober 2026, 21:10 WIB',
   changes: [
+   'GS-183: perbaikan pemetaan sentuhan editor crop agar empat titik dapat digeser dengan tepat di layar ponsel.',
+   'GS-183: ekspor JPG memakai Blob JPEG tervalidasi dan alur berbagi/Simpan ke File untuk iPhone.',
+   'GS-183: kontrol intensitas 0–100% ditambahkan untuk setiap efek dan kekuatan tiap efek disimpan terpisah selama sesi.',
    'Setelah capture, GlassScan mencoba meluruskan perspektif otomatis pada hasil crop bingkai bila kontur buku cukup meyakinkan; jika tidak, mempertahankan crop bingkai agar tidak memotong salah.',
    'Magic Color tetap aktif otomatis untuk pratinjau dan ekspor setelah foto diambil.',
    'Setelah tombol foto ditekan, gambar langsung dipotong mengikuti area bingkai tetap (memperhitungkan object-fit: cover) dan Magic Color dipilih otomatis.',
