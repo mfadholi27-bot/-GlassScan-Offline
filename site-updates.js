@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.9 · GS-189',
-  updatedAt: '28 Oktober 2026, 22:50 WIB',
+  version: 'V1.9.0 · GS-190',
+  updatedAt: '28 Oktober 2026, 23:05 WIB',
   changes: [
+   'GS-190: menambahkan deteksi empat sudut berbasis model ML DocAligner melalui quadscan/ONNX Runtime Web. Model diunduh saat fitur AI pertama kali digunakan; service worker mencoba menyimpan aset CDN untuk penggunaan offline berikutnya.',
+   'GS-190: tombol Deteksi sudut AI mengganti deteksi otomatis di editor crop. Jika model gagal dimuat atau sudut tidak meyakinkan, GlassScan mempertahankan deteksi klasik dan editor empat titik manual sebagai cadangan.',
    'GS-189: memperkuat pemisahan Adaptive B&W dengan normalisasi pencahayaan lokal dan ambang yang lebih tegas; hasil tetap harus diperiksa pada foto nyata.',
    'GS-189: umpan balik pengambilan foto berupa kilatan visual dan animasi tombol; getaran dicoba pada perangkat/browser yang mendukungnya. iOS Safari biasanya tidak mendukung navigator.vibrate, sehingga kilatan visual menjadi fallback.',
    'GS-189: model AI terlatih untuk empat tugas belum terintegrasi. Tidak ada model CNN/YOLO/U-Net/dewarping yang dibundel pada rilis ini.',
@@ -36,7 +38,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'Deteksi sudut AI memerlukan koneksi internet saat pertama kali memuat library/runtime/model; aset CDN dicache saat berhasil, tetapi mode offline berikutnya tetap harus diuji pada perangkat dan browser yang digunakan. Empat model AI untuk penghilang bayangan, dewarping halaman, dan pemulihan teks belum terintegrasi. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;
