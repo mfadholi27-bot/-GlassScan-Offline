@@ -6,10 +6,10 @@ $('switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'enviro
 $('autoBtn').onclick=()=>{guideOn=!guideOn;$('fixedScanFrame').hidden=!guideOn;$('autoBtn').textContent=`Bingkai: ${guideOn?'ON':'OFF'}`;$('autoBtn').classList.toggle('on',guideOn);toast(guideOn?'Bingkai panduan ditampilkan':'Bingkai panduan disembunyikan')};
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;compareOriginal=false;syncCompareButton();document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));syncEffectPanel();render()});
 $('compareBtn').onclick=()=>{compareOriginal=!compareOriginal;syncCompareButton();render()};function syncCompareButton(){const b=$('compareBtn');if(b)b.textContent=compareOriginal?'Lihat hasil olahan':'Bandingkan: lihat asli'}
-const effectStrengths={magic:100,color:100,bw:100,adaptive:100,gray:100,enhance:100,shadow:100,scanpro:100,bookpremium:100};
+const effectStrengths={magic:100,magicpro:100,color:100,bw:100,adaptive:100,gray:100,enhance:100,shadow:100,scanpro:100,bookpremium:100};
 function ensureEffectPanel(){if($('effectControlPanel'))return;const panel=document.createElement('section');panel.id='effectControlPanel';panel.className='effect-control glass';panel.innerHTML='<div class="effect-control-head"><div><small>EFEK AKTIF</small><strong id="effectName">Magic Color</strong></div><output id="effectValue">100%</output></div><div class="effect-slider-row"><button type="button" id="effectMinus" aria-label="Kurangi intensitas">−</button><input id="effectStrength" type="range" min="0" max="200" step="1" value="100" aria-label="Intensitas efek sampai 200 persen"><button type="button" id="effectPlus" aria-label="Tambah intensitas">+</button></div><div class="effect-scale"><span>Lembut</span><span>Kuat · 200%</span></div><p>Atur kekuatan setiap efek secara terpisah. 100% = normal, 200% = efek lebih kuat. Nilai tersimpan selama halaman ini terbuka.</p>';document.querySelector('.filters').insertAdjacentElement('afterend',panel);$('effectStrength').addEventListener('input',e=>{effectStrengths[filter]=Number(e.target.value);syncEffectPanel();render()});$('effectMinus').onclick=()=>setEffectStrength(-10);$('effectPlus').onclick=()=>setEffectStrength(10);syncEffectPanel()}
 function setEffectStrength(delta){if(filter==='original')return;effectStrengths[filter]=Math.max(0,Math.min(200,(effectStrengths[filter]??100)+delta));syncEffectPanel();render()}
-function syncEffectPanel(){const panel=$('effectControlPanel');if(!panel)return;const names={original:'Asli (tanpa efek)',magic:'Magic Color',color:'Color natural',bw:'Hitam putih',adaptive:'Adaptive B&W',gray:'Grayscale',enhance:'Teks tajam',shadow:'Kurangi bayangan',scanpro:'Book Premium',bookpremium:'Book Premium'};const value=filter==='original'?0:(effectStrengths[filter]??100);$('effectName').textContent=names[filter]||filter;$('effectValue').textContent=value+'%';$('effectStrength').value=value;$('effectStrength').disabled=filter==='original';$('effectMinus').disabled=filter==='original'||value===0;$('effectPlus').disabled=filter==='original'||value===100}
+function syncEffectPanel(){const panel=$('effectControlPanel');if(!panel)return;const names={original:'Asli (tanpa efek)',magic:'Magic Color',magicpro:'Magic Color Pro',color:'Color natural',bw:'Hitam putih',adaptive:'Adaptive B&W',gray:'Grayscale',enhance:'Teks tajam',shadow:'Kurangi bayangan',scanpro:'Book Premium',bookpremium:'Book Premium'};const value=filter==='original'?0:(effectStrengths[filter]??100);$('effectName').textContent=names[filter]||filter;$('effectValue').textContent=value+'%';$('effectStrength').value=value;$('effectStrength').disabled=filter==='original';$('effectMinus').disabled=filter==='original'||value===0;$('effectPlus').disabled=filter==='original'||value===100}
 $('correctBtn').onclick=openCropEditor;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').disabled=false;$('cropAuto').onclick=()=>{const b=$('cropAuto');b.disabled=false;if(!cropImage){toast('Buka editor crop terlebih dahulu.');return}try{const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Deteksi klasik menemukan perkiraan sudut. Periksa titik.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')}catch(e){console.warn('[GlassScan] Classic corner detection failed',e);toast('Deteksi otomatis gagal. Geser empat titik secara manual.')}finally{b.disabled=false}};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
 $('deleteBtn').onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast('Halaman dihapus')};$('rotateBtn').onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast('Halaman diputar')};$('saveJpgBtn').onclick=()=>active>=0&&exportJpg(active);$('savePngBtn').onclick=()=>active>=0&&exportPng(active);$('exportAllJpg').onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*400));toast('Menyiapkan file JPG satu per satu')};$('exportPdf').onclick=exportPdf;
 const readFile=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
@@ -306,7 +306,7 @@ function applyFilterCore(c,w,h,mode){
   for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2],v=mode==='bw'?(y>threshold?255:0):y;d[i]=d[i+1]=d[i+2]=v}
   c.putImageData(im,0,0);return;
  }
- if(!['enhance','magic','shadow','scanpro','bookpremium','color'].includes(mode))return;
+ if(!['enhance','magic','magicpro','shadow','scanpro','bookpremium','color'].includes(mode))return;
  const sw=Math.max(16,Math.ceil(w/40)),sh=Math.max(16,Math.ceil(h/40)),small=document.createElement('canvas');small.width=sw;small.height=sh;
  const sc=small.getContext('2d',{willReadFrequently:true});sc.drawImage(c,0,0,sw,sh);
  const sd=sc.getImageData(0,0,sw,sh).data,field=new Float32Array(sw*sh);
@@ -317,10 +317,20 @@ function applyFilterCore(c,w,h,mode){
   let gain=1;
   if(mode==='shadow')gain=Math.max(.78,Math.min(1.42,Math.pow(205/bg,.72)));
   else if(mode==='magic'||mode==='bookpremium'||mode==='scanpro')gain=Math.max(.76,Math.min(1.48,Math.pow(218/bg,mode==='magic' ? .78 : .68)));
+  else if(mode==='magicpro')gain=Math.max(.72,Math.min(1.62,Math.pow(222/bg,.76)));
   else if(mode==='enhance')gain=1.18;
   else if(mode==='color')gain=Math.max(.88,Math.min(1.18,Math.pow(218/bg,.24)));
   let rr=r*gain,gg=g*gain,bb=b*gain;
   if(mode==='enhance'){rr=(rr-128)*1.20+136;gg=(gg-128)*1.20+136;bb=(bb-128)*1.20+136}
+  if(mode==='magicpro'){
+   // Magic Color Pro: local illumination correction, restrained color recovery and
+   // local contrast, entirely in-browser. No network/model dependency; safe offline.
+   const ll=.299*rr+.587*gg+.114*bb;
+   const sat=1.06;
+   rr=ll+(rr-ll)*sat;gg=ll+(gg-ll)*sat;bb=ll+(bb-ll)*sat;
+   const localContrast=1.10;
+   rr=(rr-128)*localContrast+130;gg=(gg-128)*localContrast+130;bb=(bb-128)*localContrast+130;
+  }
   if(mode==='magic'||mode==='bookpremium'||mode==='scanpro'){
    const ll=.299*rr+.587*gg+.114*bb,sat=mode==='magic'?1.09:1.035;
    rr=ll+(rr-ll)*sat;gg=ll+(gg-ll)*sat;bb=ll+(bb-ll)*sat;
@@ -329,9 +339,9 @@ function applyFilterCore(c,w,h,mode){
   d[i]=clamp(rr);d[i+1]=clamp(gg);d[i+2]=clamp(bb);
  }
  c.putImageData(im,0,0);
- if(['enhance','magic','bookpremium','scanpro'].includes(mode)){
+ if(['enhance','magic','magicpro','bookpremium','scanpro'].includes(mode)){
   const blur=document.createElement('canvas');blur.width=w;blur.height=h;const bc=blur.getContext('2d',{willReadFrequently:true});bc.filter='blur(0.7px)';bc.drawImage(c,0,0,w,h);bc.filter='none';
-  const base=c.getImageData(0,0,w,h),bd=bc.getImageData(0,0,w,h).data,od=base.data,amount=mode==='enhance' ? .30 : mode==='magic' ? .20 : .14;
+  const base=c.getImageData(0,0,w,h),bd=bc.getImageData(0,0,w,h).data,od=base.data,amount=mode==='enhance' ? .30 : mode==='magicpro' ? .26 : mode==='magic' ? .20 : .14;
   for(let i=0;i<od.length;i+=4)for(let ch=0;ch<3;ch++)od[i+ch]=clamp(od[i+ch]+(od[i+ch]-bd[i+ch])*amount);
   c.putImageData(base,0,0);
  }
