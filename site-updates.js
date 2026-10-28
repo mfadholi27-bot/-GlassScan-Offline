@@ -1,17 +1,17 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.7.1 · GS-171',
-  updatedAt: '28 Oktober 2026, 19:30 WIB',
+  version: 'V1.7.2 · GS-172',
+  updatedAt: '28 Oktober 2026, 19:32 WIB',
   changes: [
    'Deteksi live dibatasi agar kamera ponsel lebih ringan dan garis panduan lebih stabil.',
    'Overlay sudut disesuaikan dengan mode kamera object-fit: cover.',
    'Koreksi pencahayaan diperhalus; mode Enhance/Magic mendapat penajaman ringan.',
    'Urutan titik sudut diperbaiki menggunakan posisi relatif terhadap pusat quadrilateral.',
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
-   'Cache aplikasi diperbarui untuk memuat aset versi baru.'
+   'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Skor kualitas bersifat indikatif. Deteksi OpenCV lokal penuh dan pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;
