@@ -208,10 +208,26 @@ function capture(){
  const sw=ex-sx,sh=ey-sy,down=Math.min(1,2600/Math.max(sw,sh));
  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*down));c.height=Math.max(1,Math.round(sh*down));
  c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
- const data=c.toDataURL('image/jpeg',.97);
- pages.push({data,name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`,rotation:0});
+ let output=c,autoStraightened=false;
+ // Search for a plausible document contour only inside the guide crop.
+ try{
+  const q=detectQuadOpenCV(c);
+  if(q&&q.length===4){
+   const area=Math.abs(q.reduce((sum,p,i)=>sum+p[0]*q[(i+1)%4][1]-p[1]*q[(i+1)%4][0],0)/2);
+   const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);
+   const bw=Math.max(...xs)-Math.min(...xs),bh=Math.max(...ys)-Math.min(...ys);
+   const ratio=bw/Math.max(1,bh),areaRatio=area/(c.width*c.height),margin=.015;
+   const inside=q.every(p=>p[0]>=c.width*margin&&p[0]<=c.width*(1-margin)&&p[1]>=c.height*margin&&p[1]<=c.height*(1-margin));
+   if(inside&&areaRatio>.36&&areaRatio<.94&&ratio>.34&&ratio<.98){
+    const warped=perspectiveWarp(c,q);
+    if(warped&&warped.width>100&&warped.height>100){output=warped;autoStraightened=true}
+   }
+  }
+ }catch(e){console.warn('Auto perspective correction skipped',e)}
+ const data=output.toDataURL('image/jpeg',.97);
+ pages.push({data,name:'GlassScan_'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg',rotation:0});
  active=pages.length-1;filter='magic';syncFilter();render();counts();
- toast('Foto langsung dipotong mengikuti bingkai dan Magic Color diterapkan. Untuk meluruskan perspektif, buka Deteksi sudut & crop.')
+ toast(autoStraightened?'Foto langsung dipotong, diluruskan, dan Magic Color diterapkan.':'Foto langsung dipotong mengikuti bingkai dan Magic Color diterapkan. Sudut buku belum cukup meyakinkan untuk diluruskan otomatis; gunakan Deteksi sudut & crop bila perlu.')
 }
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
