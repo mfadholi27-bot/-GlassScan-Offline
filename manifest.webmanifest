@@ -1,0 +1,19 @@
+{
+  "name": "GlassScan Offline",
+  "short_name": "GlassScan",
+  "description": "Pemindai dokumen lokal dengan filter hitam putih dan ekspor PDF.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
