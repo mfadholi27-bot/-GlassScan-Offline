@@ -24,13 +24,16 @@
 <div style="font-size:15px;font-weight:800;margin-bottom:6px">✦ ChatGPT Document Workspace</div>
 <p style="font-size:12px;line-height:1.5;color:#a9bfd5;margin:0 0 12px">Siapkan gambar scan lalu bagikan ke ChatGPT untuk membaca teks, merapikan OCR, merangkum, atau membantu meningkatkan keterbacaan. Pengiriman dilakukan hanya setelah persetujuanmu.</p>
 <button id="gsChatGPTQuick" type="button" style="width:100%;border:0;border-radius:12px;padding:14px;background:linear-gradient(110deg,#63e6ff,#9d9aff);color:#07111f;font-weight:800">✦ Kirim gambar ke ChatGPT</button>
-<button id="gsOpenChatGPT" type="button" style="width:100%;margin-top:8px;border:1px solid #63e6ff55;border-radius:12px;padding:12px;background:#14243a;color:#e9f6ff;font-weight:700">Masuk / buka ChatGPT ↗</button>\n<div id="gsChatGPTQuickStatus" role="status" aria-live="polite" style="font-size:11px;line-height:1.5;color:#9fb4c9;margin-top:9px">Siapkan gambar, lalu pilih tombol untuk membagikannya ke ChatGPT.</div>
+<button id="gsOpenChatGPT" type="button" style="width:100%;margin-top:8px;border:1px solid #63e6ff55;border-radius:12px;padding:12px;background:#14243a;color:#e9f6ff;font-weight:700">Masuk / buka ChatGPT ↗</button>
+<div id="gsChatGPTQuickStatus" role="status" aria-live="polite" style="font-size:11px;line-height:1.5;color:#9fb4c9;margin-top:9px">Siapkan gambar, lalu pilih tombol untuk membagikannya ke ChatGPT.</div>
 </section>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
  const b=document.getElementById('gsChatGPTQuick'),s=document.getElementById('gsChatGPTQuickStatus');
  const dlg=document.getElementById('gsChatGPTConsent'),yes=document.getElementById('gsChatGPTConsentYes'),no=document.getElementById('gsChatGPTConsentNo');
- if(!b||b.dataset.bound)return;b.dataset.bound='1';\n const loginBtn=document.getElementById('gsOpenChatGPT');\n loginBtn?.addEventListener('click',()=>{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');s.textContent='ChatGPT dibuka. Tombol ini membuka situs resmi; login tidak tertanam di GlassScan. Untuk analisis, kembali ke GlassScan dan gunakan Kirim gambar ke ChatGPT.';});
+ if(!b||b.dataset.bound)return;b.dataset.bound='1';
+ const loginBtn=document.getElementById('gsOpenChatGPT');
+ loginBtn?.addEventListener('click',()=>{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');s.textContent='ChatGPT dibuka. Tombol ini membuka situs resmi; login tidak tertanam di GlassScan. Untuk analisis, kembali ke GlassScan dan gunakan Kirim gambar ke ChatGPT.';});
  let pendingBlob=null,pendingPrompt='';
  b.addEventListener('click',async function(){
   const canvas=document.getElementById('previewCanvas');
