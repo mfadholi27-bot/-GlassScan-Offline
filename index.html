@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="styles.css">
-<title>GlassScan Offline · v2</title>
+<title>GlassScan Offline · v0.3</title>
 </head>
 <body>
 <div class="ambient a"></div><div class="ambient b"></div>
@@ -18,16 +18,16 @@
  <div class="camera-head"><div><small>LIVE SCANNER</small><h3>Ratakan dokumen</h3></div><button id="closeCamera" class="round">×</button></div>
  <div class="camera-stage"><video id="video" autoplay playsinline muted></video><canvas id="edgeCanvas"></canvas><div class="camera-placeholder" id="cameraPlaceholder"><span class="focus-frame"></span><b>Menyiapkan kamera…</b><small>Letakkan dokumen di dalam bingkai</small></div><div class="camera-hud"><span id="detectStatus">MENUNGGU DOKUMEN</span><span class="hud-dot"></span></div></div>
  <div class="camera-controls"><button id="switchCamera" class="secondary">Ganti kamera</button><button id="captureBtn" class="shutter" aria-label="Ambil gambar"><span></span></button><button id="autoBtn" class="secondary auto-toggle">Auto: OFF</button></div>
- <p class="camera-note">Deteksi garis ini merupakan estimasi berbasis kontras di browser. Untuk deteksi sudut OpenCV tingkat profesional, lihat README dan tahap integrasi berikutnya.</p>
+ <p class="camera-note">Garis sudut dihitung lokal dari kontras gambar. Hasil terbaik: kertas kontras dengan meja, cahaya merata, seluruh sudut terlihat.</p>
 </section>
 <section class="section-title filter-heading"><div><small>IMAGE LAB</small><h2>Enhance scan</h2></div><span class="micro">LOCAL FILTERS</span></section>
-<section class="filters"><button class="filter active" data-filter="original"><span class="sample orig">Aa</span>Original</button><button class="filter" data-filter="bw"><span class="sample bw">Aa</span>Black &amp; white</button><button class="filter" data-filter="gray"><span class="sample gray">Aa</span>Grayscale</button><button class="filter" data-filter="enhance"><span class="sample enhance">Aa</span>Enhance</button></section>
+<section class="filters"><button class="filter active" data-filter="original"><span class="sample orig">Aa</span>Original</button><button class="filter" data-filter="bw"><span class="sample bw">Aa</span>Black &amp; white</button><button class="filter" data-filter="gray"><span class="sample gray">Aa</span>Grayscale</button><button class="filter" data-filter="enhance"><span class="sample enhance">Aa</span>Enhance</button><button class="filter" data-filter="shadow"><span class="sample enhance">☼</span>Kurangi bayangan</button></section>
 <section class="preview glass"><div class="preview-head"><div><small>DOCUMENT PREVIEW</small><h3 id="previewTitle">Belum ada dokumen</h3></div><span class="local-badge"><i></i> LOCAL</span></div>
 <div id="emptyState" class="empty"><div class="empty-icon"><span></span></div><b>Siap memindai</b><p>Gunakan kamera atau impor gambar untuk memulai.</p></div><div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div>
-<div class="preview-actions" id="previewActions" hidden><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90°</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
+<div class="preview-actions" id="previewActions" hidden><button id="correctBtn" class="secondary">✦ Deteksi sudut &amp; crop</button><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90°</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
 <section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>⇩ Export PDF</button></div></section>
-<footer>◇ File diproses lokal · Tidak ada API eksternal <small>GlassScan v0.2 · Prototype</small></footer>
+<footer>◇ File diproses lokal · Tidak ada API eksternal <small>GlassScan v0.3 · Offline beta</small></footer>
 </main>
-<dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GLASSSCAN OFFLINE</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Kamera live memerlukan HTTPS dan izin kamera. Jika kamera tidak didukung dalam konteks ini, gunakan Impor gambar. Deteksi sudut lanjutan dan OCR belum tersedia di prototipe ini.</p></dialog>
+<dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GLASSSCAN OFFLINE</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Pemrosesan gambar berlangsung lokal. Deteksi sudut berbasis tepi adalah estimasi heuristik dan perlu diperiksa untuk dokumen yang miring/berlatar rumit. Koreksi perspektif, crop, filter warna/BW, dan pengurangan bayangan berjalan di browser. Belum ada OCR.</p></dialog>
 <div id="toast" role="status" aria-live="polite"></div><script src="app.js"></script>
 </body></html>
