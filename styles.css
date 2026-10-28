@@ -50,3 +50,75 @@
  .filters{gap:6px}
  .filter{font-size:10px}
 }
+
+
+/* GlassScan Premium UI pass — larger icons, balanced type, consistent spacing */
+:root{--cyan:#42e8ff;--violet:#a69bff;--text:#f4f8ff;--muted:#a8bdd4}
+button{touch-action:manipulation}
+.shell{max-width:900px;padding-left:18px;padding-right:18px}
+.topbar{gap:15px;margin-bottom:18px}
+.logo{width:60px;height:60px;min-width:60px;border-radius:19px;font-size:0;background:linear-gradient(145deg,#00d9b0,#007e91 70%,#182c72);box-shadow:0 10px 28px #00e5d022}
+.logo span{font-size:24px;font-weight:900;letter-spacing:-1px;color:#eaffff}
+.brand small,.section-title small,.camera-head small,.preview-head small,.export small,.dialog>small{font-size:10px;letter-spacing:1.8px}
+.brand h1{font-size:clamp(23px,5vw,32px);line-height:1.12;letter-spacing:-.9px;margin-top:5px}
+.round{width:46px;height:46px;min-width:46px;font-size:25px;border-radius:15px}
+.build-ribbon{font-size:10px;letter-spacing:1.2px}
+.hero{min-height:270px;padding:26px;border-radius:28px}
+.hero h2{font-size:clamp(34px,6vw,46px);line-height:1.04;letter-spacing:-1.5px}
+.hero p{font-size:14px;line-height:1.55;max-width:310px}
+.hero-pills span{font-size:11px;padding:8px 10px}
+.section-title{margin-bottom:15px}
+.section-title h2{font-size:24px;letter-spacing:-.7px}
+.count,.micro{font-size:11px;padding:8px 11px}
+.capture-grid{gap:14px;margin-bottom:28px}
+.capture{min-height:164px;padding:18px;border-radius:23px;gap:9px}
+.capture-icon{width:58px;height:58px;border-radius:18px;font-size:0;margin-bottom:5px;display:grid;place-items:center}
+.capture-icon svg{width:34px;height:34px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.capture b{font-size:17px;line-height:1.25;letter-spacing:-.2px}
+.capture small{font-size:12px;line-height:1.35}
+.arrow{font-size:20px;right:17px;top:16px}
+.filters{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:24px}
+.filter{min-height:100px;padding:12px 5px;border-radius:17px;gap:9px;font-size:12px;font-weight:650;white-space:normal;text-align:center;line-height:1.25}
+.sample{width:54px;height:48px;border-radius:13px;font-size:0}
+.sample svg{width:29px;height:29px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.preview{padding:20px;border-radius:25px}
+.preview-head h3,.camera-head h3,.export h3{font-size:19px;line-height:1.25;margin-top:7px}
+.local-badge{font-size:11px;padding:8px 10px}
+.empty{min-height:210px;border-radius:20px;padding:24px}
+.empty-icon{transform:scale(1.15);margin-bottom:20px}
+.empty b{font-size:16px}
+.empty p{font-size:13px;line-height:1.45;max-width:300px}
+.preview-actions{gap:9px}
+.secondary,.danger{min-height:46px;padding:12px 13px;font-size:12px;font-weight:650;border-radius:13px}
+.preview-actions button{display:flex;align-items:center;justify-content:center;gap:8px;line-height:1.25}
+.btn-icon{width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center}
+.btn-icon svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.thumb{flex-basis:68px;height:78px;border-radius:13px}
+.export{padding:20px;border-radius:24px}
+.export p{font-size:13px;line-height:1.55}
+.export-btn{min-height:48px;padding:13px 15px;font-size:13px;border-radius:14px}
+#gsChatGPTQuickPanel{padding:22px!important;margin:18px 0!important;border-radius:26px!important;background:linear-gradient(145deg,#102b43,#111c38 65%,#241a4a)!important;border:1px solid #38dcff66!important;box-shadow:0 18px 45px #0003,inset 0 1px #ffffff14}
+.gs-ai-heading{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.gs-ai-mark{width:58px;height:58px;min-width:58px;border-radius:19px;display:grid;place-items:center;background:linear-gradient(145deg,#00d8ad,#006d98);box-shadow:0 8px 24px #00d9ff25}
+.gs-ai-mark svg{width:36px;height:36px;stroke:#fff;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gs-ai-title{font-size:clamp(20px,4vw,25px);font-weight:850;line-height:1.15;letter-spacing:-.5px}
+.gs-ai-subtitle{font-size:11px;color:#76dff2;font-weight:800;letter-spacing:1.3px;margin-top:5px}
+#gsChatGPTQuickPanel>p{font-size:14px!important;line-height:1.65!important;color:#b9cde2!important;margin:12px 0 18px!important}
+#gsChatGPTQuick,#gsOpenChatGPT{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;min-height:58px;padding:15px 18px!important;border-radius:17px!important;font-size:15px!important;font-weight:800;line-height:1.25;letter-spacing:-.15px;white-space:normal}
+#gsChatGPTQuick{background:linear-gradient(110deg,#00d9f5,#1783ff 68%,#725cff)!important;color:white!important;box-shadow:0 10px 24px #087cff28}
+#gsOpenChatGPT{background:#ffffff08!important;border:1px solid #62dffb50!important;color:#eaf8ff!important;font-size:13px!important}
+.gs-action-icon{width:27px;height:27px;min-width:27px;display:inline-grid;place-items:center}
+.gs-action-icon svg{width:27px;height:27px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#gsChatGPTQuickStatus{font-size:12px!important;line-height:1.55!important;margin-top:12px!important;color:#9ebbd2!important}
+#gsChatGPTConsent{border-radius:25px}
+#gsChatGPTConsent h2{font-size:24px;line-height:1.15}
+#gsChatGPTConsent p{font-size:13px!important;line-height:1.65!important}
+.camera-panel{padding:19px;border-radius:24px}
+.camera-placeholder b{font-size:15px}
+.camera-placeholder small,.camera-note{font-size:12px;line-height:1.6}
+.camera-note{margin-top:13px}
+.camera-controls .secondary{min-height:48px;font-size:12px}
+.shutter{width:68px;height:68px}.shutter span{width:50px;height:50px}
+footer{font-size:11px;line-height:1.6}
+@media(min-width:700px){.capture-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:repeat(6,minmax(0,1fr))}.hero{min-height:300px}}
+@media(max-width:420px){.shell{padding-left:13px;padding-right:13px}.logo{width:53px;height:53px;min-width:53px}.brand h1{font-size:23px}.brand small{font-size:8px;letter-spacing:1.1px}.hero{padding:20px;min-height:250px}.hero h2{font-size:34px}.hero-visual{right:-22px;opacity:.62}.hero-copy{max-width:82%}.capture{min-height:150px;padding:14px}.capture-icon{width:54px;height:54px}.capture b{font-size:15px}.capture small{font-size:11px}.section-title h2{font-size:22px}.filter{min-height:94px;font-size:11px}.sample{width:47px;height:43px}.preview{padding:14px}.preview-actions button{flex:1 1 42%;font-size:11px}#gsChatGPTQuickPanel{padding:17px!important}.gs-ai-mark{width:52px;height:52px;min-width:52px}.gs-ai-title{font-size:21px}#gsChatGPTQuick,#gsOpenChatGPT{font-size:13px!important;min-height:54px}}
