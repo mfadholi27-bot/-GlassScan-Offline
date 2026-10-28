@@ -1,10 +1,10 @@
-# GlassScan Offline — release candidate GS-180
+# GlassScan Offline — development line GS-198
 
 ## Release stamp
-- Version: V1.8.2 · GS-182
-- Change timestamp shown in app: 28 Oktober 2026, 20:35 WIB
+- Version: V1.9.8 · GS-198
+- Change timestamp shown in app: 29 Oktober 2026, 01:50 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v182-auto-perspective-cache`
+- Service-worker cache: `glassscan-v198-mesh-dewarp-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
@@ -61,3 +61,11 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Added a local geometric correction preview and strength control to the scan workspace.
 - Added restore-original support for the most recent dewarping operation.
 - This is a lightweight approximate remap for mild curvature, not a learned or full 3D page reconstruction. Test with curved pages and verify text distortion before relying on results.
+
+
+### GS-198 — 2D mesh-inspired dewarping (29 Oktober 2026, 01:50 WIB)
+- Replaced the previous vertical-only displacement with a bounded 24×24 displacement mesh and bilinear interpolation for a smooth 2D inverse remap.
+- Preview and applied output share the same remap function; applied processing is capped at 2200 px on the longest side to limit browser memory use.
+- Out-of-bounds samples are filled white. The source image is preserved for the existing restore/undo action.
+- Limitations: this is a symmetric curvature approximation, not text-baseline detection, learned dewarping, or 3D page reconstruction. Strong folds, asymmetric page curvature, and text near edges may distort; real-device visual tests remain required.
+- Validation status: source updated; no browser/device visual regression test has been performed in this change.
