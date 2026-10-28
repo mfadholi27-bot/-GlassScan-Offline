@@ -1,10 +1,10 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.1 · GS-191',
+  version: 'V1.9.2 · GS-192',
   updatedAt: '28 Oktober 2026, 23:35 WIB',
   changes: [
-   'GS-191: memperbaiki tombol Deteksi sudut AI yang dapat terkunci saat pemuatan model tidak selesai; pemuatan dan proses deteksi kini memiliki batas waktu serta tombol dapat dicoba ulang. GS-190: menambahkan deteksi empat sudut berbasis model ML DocAligner melalui quadscan/ONNX Runtime Web. Model diunduh saat fitur AI pertama kali digunakan; service worker mencoba menyimpan aset CDN untuk penggunaan offline berikutnya.',
+   'GS-192: reset status tombol Deteksi sudut & crop setiap kali editor dibuka; deteksi klasik tetap bisa dijalankan jika AI tidak tersedia. GS-191: memperbaiki tombol Deteksi sudut AI yang dapat terkunci saat pemuatan model tidak selesai; pemuatan dan proses deteksi kini memiliki batas waktu serta tombol dapat dicoba ulang. GS-190: menambahkan deteksi empat sudut berbasis model ML DocAligner melalui quadscan/ONNX Runtime Web. Model diunduh saat fitur AI pertama kali digunakan; service worker mencoba menyimpan aset CDN untuk penggunaan offline berikutnya.',
    'GS-190: tombol Deteksi sudut AI mengganti deteksi otomatis di editor crop. Jika model gagal dimuat atau sudut tidak meyakinkan, GlassScan mempertahankan deteksi klasik dan editor empat titik manual sebagai cadangan.',
    'GS-189: memperkuat pemisahan Adaptive B&W dengan normalisasi pencahayaan lokal dan ambang yang lebih tegas; hasil tetap harus diperiksa pada foto nyata.',
    'GS-189: umpan balik pengambilan foto berupa kilatan visual dan animasi tombol; getaran dicoba pada perangkat/browser yang mendukungnya. iOS Safari biasanya tidak mendukung navigator.vibrate, sehingga kilatan visual menjadi fallback.',
