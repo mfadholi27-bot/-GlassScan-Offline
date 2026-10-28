@@ -20,6 +20,35 @@
 <section class="section-title filter-heading"><div><small>IMAGE LAB</small><h2>Enhance scan</h2></div><span class="micro">LOCAL FILTERS</span></section>
 <section class="filters"><button class="filter active" data-filter="original"><span class="sample orig">Aa</span>Asli</button><button class="filter" data-filter="magic"><span class="sample enhance">*</span>Magic Color</button><button class="filter" data-filter="bw"><span class="sample bw">Aa</span>Hitam putih</button><button class="filter" data-filter="gray"><span class="sample gray">Aa</span>Grayscale</button><button class="filter" data-filter="enhance"><span class="sample enhance">Aa</span>Teks tajam</button><button class="filter" data-filter="shadow"><span class="sample enhance">Sun</span>Kurangi bayangan</button></section>
 <section class="preview glass"><div class="preview-head"><div><small>DOCUMENT PREVIEW</small><h3 id="previewTitle">Belum ada dokumen</h3></div><span class="local-badge"><i></i> LOCAL</span></div><div id="emptyState" class="empty"><div class="empty-icon"><span></span></div><b>Siap memindai</b><p>Gunakan kamera atau impor gambar untuk memulai.</p></div><div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div><div class="preview-actions" id="previewActions" hidden><button id="correctBtn" class="secondary">* Deteksi sudut &amp; crop</button><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90 deg</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
+<section class="glass" id="gsChatGPTQuickPanel" style="padding:16px;margin:14px 0;border:1px solid #63e6ff55;background:#101d30;border-radius:20px">
+<div style="font-size:15px;font-weight:800;margin-bottom:6px">✦ Bantu dengan ChatGPT</div>
+<p style="font-size:12px;line-height:1.5;color:#a9bfd5;margin:0 0 12px">Jalankan OCR terlebih dahulu, lalu kirim teks hasil scan ke ChatGPT untuk dirapikan dan diringkas.</p>
+<button id="gsChatGPTQuick" type="button" style="width:100%;border:0;border-radius:12px;padding:14px;background:linear-gradient(110deg,#63e6ff,#9d9aff);color:#07111f;font-weight:800">Bantu dengan ChatGPT</button>
+<div id="gsChatGPTQuickStatus" role="status" aria-live="polite" style="font-size:11px;line-height:1.5;color:#9fb4c9;margin-top:9px">Jalankan OCR Indonesia terlebih dahulu.</div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const b=document.getElementById('gsChatGPTQuick'),s=document.getElementById('gsChatGPTQuickStatus');
+ if(!b||b.dataset.bound)return;b.dataset.bound='1';
+ b.addEventListener('click',async function(){
+  const r=document.getElementById('gsOcrResult');
+  const t=(r?.textContent||'').trim();
+  if(!t||t==='Hasil teks akan muncul di sini.'||t.startsWith('Tidak ada teks yang terdeteksi')){
+   s.textContent='Jalankan OCR Indonesia terlebih dahulu. Jika OCR gagal, periksa aset lokal.';
+   document.getElementById('gsRunOcr')?.scrollIntoView({behavior:'smooth',block:'center'});return;
+  }
+  const p='Rapikan teks hasil scan berikut. Pertahankan makna, nama, tanggal, dan angka. Perbaiki salah baca OCR hanya jika jelas, tandai bagian meragukan dengan [periksa], lalu buat ringkasan singkat.\\n\\nHASIL OCR:\\n'+t;
+  try{
+   if(navigator.share){await navigator.share({title:'GlassScan - hasil scan',text:p});s.textContent='Menu berbagi dibuka. Pilih ChatGPT. Jika tidak tersedia, gunakan Salin teks.';}
+   else{await navigator.clipboard.writeText(p);window.open('https://chatgpt.com/','_blank','noopener,noreferrer');s.textContent='Teks disalin. Tempelkan ke ChatGPT.';}
+  }catch(e){
+   if(e?.name==='AbortError'){s.textContent='Berbagi dibatalkan.';return;}
+   try{await navigator.clipboard.writeText(p);s.textContent='Teks disalin. Buka ChatGPT dan tempelkan.';}
+   catch{s.textContent='Gagal menyalin otomatis. Salin teks dari hasil OCR dan tempel ke ChatGPT.';}
+  }
+ });
+});
+</script>
 <section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>Download Export PDF</button></div></section>
 <footer>• File diproses lokal - Tidak ada API eksternal <small>GlassScan v1.6 - Riwayat perubahan tersedia di atas footer</small></footer>
 </main>
