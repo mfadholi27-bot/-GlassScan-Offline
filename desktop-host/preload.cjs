@@ -1,9 +1,10 @@
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-// Intentionally expose no credentials, Node APIs, or ChatGPT tokens to the page.
-// A narrowly scoped bridge will only be added after the official SIWC SDK flow
-// and Windows credential storage have been implemented and tested.
+// Only fixed, validated operations are exposed. OAuth credentials never reach the renderer.
 contextBridge.exposeInMainWorld('glassScanDesktop', Object.freeze({
-  hostVersion: '0.1.0',
-  chatgptIntegration: 'not-configured'
+  status: () => ipcRenderer.invoke('glassscan:status'),
+  signIn: () => ipcRenderer.invoke('glassscan:sign-in'),
+  disconnect: () => ipcRenderer.invoke('glassscan:disconnect'),
+  models: () => ipcRenderer.invoke('glassscan:models'),
+  ask: (text, model) => ipcRenderer.invoke('glassscan:ask', text, model)
 }));
