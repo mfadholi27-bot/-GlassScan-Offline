@@ -1,8 +1,8 @@
 /* GlassScan V1.6 offline cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v166-ai-professional-preview';
+const CACHE_NAME = 'glassscan-v167-premium-ui';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
- './site-updates.js','./manifest.webmanifest',
+ './site-updates.js','./ui-polish.js','./manifest.webmanifest',
  './vendor/tesseract/tesseract.min.js','./vendor/tesseract/worker.min.js',
  './vendor/tesseract-core/tesseract-core.wasm.js','./vendor/tesseract-core/tesseract-core.wasm',
  './vendor/tesseract-core/tesseract-core-simd.wasm.js','./vendor/tesseract-core/tesseract-core-simd.wasm',
