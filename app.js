@@ -297,7 +297,7 @@ function applyFilterCore(c,w,h,mode){
   const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2],bg=getLight(x,y);
   let gain=1;
   if(mode==='shadow')gain=Math.max(.78,Math.min(1.42,Math.pow(205/bg,.72)));
-  else if(mode==='magic'||mode==='bookpremium'||mode==='scanpro')gain=Math.max(.76,Math.min(1.48,Math.pow(218/bg,mode==='magic'?.78:.68)));
+  else if(mode==='magic'||mode==='bookpremium'||mode==='scanpro')gain=Math.max(.76,Math.min(1.48,Math.pow(218/bg,mode==='magic' ? .78 : .68)));
   else if(mode==='enhance')gain=1.18;
   else if(mode==='color')gain=Math.max(.88,Math.min(1.18,Math.pow(218/bg,.24)));
   let rr=r*gain,gg=g*gain,bb=b*gain;
@@ -312,7 +312,7 @@ function applyFilterCore(c,w,h,mode){
  c.putImageData(im,0,0);
  if(['enhance','magic','bookpremium','scanpro'].includes(mode)){
   const blur=document.createElement('canvas');blur.width=w;blur.height=h;const bc=blur.getContext('2d',{willReadFrequently:true});bc.filter='blur(0.7px)';bc.drawImage(c,0,0,w,h);bc.filter='none';
-  const base=c.getImageData(0,0,w,h),bd=bc.getImageData(0,0,w,h).data,od=base.data,amount=mode==='enhance'?.30:mode==='magic'?.20:.14;
+  const base=c.getImageData(0,0,w,h),bd=bc.getImageData(0,0,w,h).data,od=base.data,amount=mode==='enhance' ? .30 : mode==='magic' ? .20 : .14;
   for(let i=0;i<od.length;i+=4)for(let ch=0;ch<3;ch++)od[i+ch]=clamp(od[i+ch]+(od[i+ch]-bd[i+ch])*amount);
   c.putImageData(base,0,0);
  }
