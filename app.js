@@ -5,7 +5,7 @@ $('cameraBtn').onclick=startCamera;$('importBtn').onclick=()=>$('importInput').c
 $('switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'environment';await stopCamera(false);startCamera()};$('captureBtn').onclick=capture;
 $('autoBtn').onclick=()=>{guideOn=!guideOn;$('fixedScanFrame').hidden=!guideOn;$('autoBtn').textContent=`Bingkai: ${guideOn?'ON':'OFF'}`;$('autoBtn').classList.toggle('on',guideOn);toast(guideOn?'Bingkai panduan ditampilkan':'Bingkai panduan disembunyikan')};
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));render()});
-$('correctBtn').onclick=openCropEditor;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').onclick=()=>{if(!cropImage)return;const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Perkiraan sudut dimuat. Periksa dan geser titik ke tepi kertas.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
+$('correctBtn').onclick=openCropEditor;$('dewarpBtn').onclick=openDewarpEditor;$('dewarpClose').onclick=()=> $('dewarpDialog').close();$('dewarpStrength').oninput=e=>{$('dewarpStrengthValue').textContent=e.target.value+'%';};$('dewarpApply').onclick=applyDewarp;$('dewarpUndo').onclick=undoDewarp;$('dewarpRestore').onclick=undoDewarp;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').onclick=()=>{if(!cropImage)return;const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Perkiraan sudut dimuat. Periksa dan geser titik ke tepi kertas.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
 $('deleteBtn').onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast('Halaman dihapus')};$('rotateBtn').onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast('Halaman diputar')};$('saveJpgBtn').onclick=()=>active>=0&&exportJpg(active);$('exportAllJpg').onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*400));toast('Menyiapkan file JPG satu per satu')};$('exportPdf').onclick=exportPdf;
 const readFile=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith('image/'));for(const f of fs){try{const im=await loadImage(await readFile(f)),c=document.createElement('canvas'),s=Math.min(1,2600/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);pages.push({data:c.toDataURL('image/jpeg',.96),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast('Gagal membaca gambar')}}if(fs.length){active=pages.length-1;filter='original';syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan. Tekan Deteksi sudut & crop.`)}$('cameraInput').value='';$('importInput').value=''}
@@ -232,6 +232,68 @@ function capture(){
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
 function perspectiveWarp(src,q){const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);const W=Math.max(1,Math.round(Math.max(dist(q[0],q[1]),dist(q[3],q[2])))),H=Math.max(1,Math.round(Math.max(dist(q[0],q[3]),dist(q[1],q[2]))));const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height;const dst=[[0,0],[W-1,0],[W-1,H-1],[0,H-1]],A=[],b=[];for(let i=0;i<4;i++){const [x,y]=dst[i],[u,v]=q[i];A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}const h=solve(A,b),out=document.createElement('canvas');const scale=Math.min(1,2600/Math.max(W,H));out.width=Math.max(1,Math.round(W*scale));out.height=Math.max(1,Math.round(H*scale));const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(src,0,0,sw,sh);const im=oc.getImageData(0,0,out.width,out.height),srcData=im.data;const input=document.createElement('canvas');input.width=sw;input.height=sh;const ix=input.getContext('2d',{willReadFrequently:true});ix.drawImage(src,0,0,sw,sh);const id=ix.getImageData(0,0,sw,sh).data;for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++){const X=x/scale,Y=y/scale,den=h[6]*X+h[7]*Y+1,u=(h[0]*X+h[1]*Y+h[2])/den,v=(h[3]*X+h[4]*Y+h[5])/den,tx=(y*out.width+x)*4;if(u<0||v<0||u>=sw-1||v>=sh-1){srcData[tx]=srcData[tx+1]=srcData[tx+2]=255;srcData[tx+3]=255;continue}const x0=Math.floor(u),y0=Math.floor(v),fx=u-x0,fy=v-y0;for(let ch=0;ch<3;ch++){const a=id[(y0*sw+x0)*4+ch],bb=id[(y0*sw+x0+1)*4+ch],cc=id[((y0+1)*sw+x0)*4+ch],dd=id[((y0+1)*sw+x0+1)*4+ch];srcData[tx+ch]=(a*(1-fx)+bb*fx)*(1-fy)+(cc*(1-fx)+dd*fx)*fy}srcData[tx+3]=255}oc.putImageData(im,0,0);return out.toDataURL('image/jpeg',.97)}
+
+let dewarpSourceData=null;
+async function openDewarpEditor(){
+ if(active<0)return;
+ try{
+  dewarpSourceData=pages[active].data;
+  const img=await loadImage(dewarpSourceData);
+  $('dewarpStrength').value='35';$('dewarpStrengthValue').textContent='35%';
+  $('dewarpDialog').showModal();
+  drawDewarpPreview(img,35);
+  $('dewarpStrength').oninput=async e=>{
+   const value=Number(e.target.value);$('dewarpStrengthValue').textContent=value+'%';
+   try{drawDewarpPreview(img,value)}catch(err){console.warn(err)}
+  };
+ }catch(e){toast('Gagal membuka perataan kertas')}
+}
+function drawDewarpPreview(img,strength){
+ const c=$('dewarpPreview'),g=c.getContext('2d');
+ const scale=Math.min(1,900/Math.max(img.naturalWidth,img.naturalHeight));
+ c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));
+ g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+ if(strength>0){
+  const source=g.getImageData(0,0,c.width,c.height),out=g.createImageData(c.width,c.height),s=source.data,d=out.data,w=c.width,h=c.height;
+  const amp=(strength/100)*Math.min(w,h)*.075;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const xn=(x/(Math.max(1,w-1))-.5)*2;
+   const bend=amp*(1-xn*xn);
+   const sy=y+bend*(2*y/Math.max(1,h-1)-1);
+   const x0=x,y0=Math.max(0,Math.min(h-1,sy)),y1=Math.min(h-1,Math.floor(y0)+1),fy=y0-Math.floor(y0),p=(y*w+x)*4,p0=(Math.floor(y0)*w+x0)*4,p1=(y1*w+x0)*4;
+   for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
+   d[p+3]=255;
+  }
+  g.putImageData(out,0,0);
+ }
+}
+async function applyDewarp(){
+ if(active<0||!dewarpSourceData)return;
+ try{
+  const img=await loadImage(dewarpSourceData),strength=Number($('dewarpStrength').value);
+  if(!pages[active].beforeDewarp)pages[active].beforeDewarp=dewarpSourceData;
+  const max=1800,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
+  const src=document.createElement('canvas');src.width=w;src.height=h;const sg=src.getContext('2d',{willReadFrequently:true});sg.drawImage(img,0,0,w,h);
+  const input=sg.getImageData(0,0,w,h),output=sg.createImageData(w,h),s=input.data,d=output.data,amp=(strength/100)*Math.min(w,h)*.075;
+  for(let y=0;y<h;y++){
+   const yn=y/Math.max(1,h-1);
+   for(let x=0;x<w;x++){
+    const xn=(x/Math.max(1,w-1)-.5)*2,sy=Math.max(0,Math.min(h-1,y+amp*(1-xn*xn)*(2*yn-1)));
+    const y0=Math.floor(sy),y1=Math.min(h-1,y0+1),fy=sy-y0,p=(y*w+x)*4,p0=(y0*w+x)*4,p1=(y1*w+x)*4;
+    for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
+    d[p+3]=255;
+   }
+  }
+  sg.putImageData(output,0,0);pages[active].data=src.toDataURL('image/jpeg',.97);
+  $('dewarpDialog').close();render();toast('Perataan geometris diterapkan. Periksa teks dan tepi halaman.');
+ }catch(e){console.error(e);toast('Perataan gagal. Coba kekuatan lebih rendah.')}
+}
+function undoDewarp(){
+ if(active<0||!pages[active].beforeDewarp){toast('Belum ada perataan yang dapat dibatalkan');return}
+ pages[active].data=pages[active].beforeDewarp;delete pages[active].beforeDewarp;
+ $('dewarpDialog').close();render();toast('Perataan dibatalkan; gambar sebelum perataan dipulihkan')
+}
+
 function syncFilter(){document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter))}function analyzeDocumentQuality(source){
  const w=source.naturalWidth||source.videoWidth||source.width,h=source.naturalHeight||source.videoHeight||source.height;
  if(!w||!h)return {score:0,blur:0,brightness:0,dark:0,glare:0,tips:['Gambar belum siap dianalisis.']};

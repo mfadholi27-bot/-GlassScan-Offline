@@ -55,3 +55,9 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Perspective warp is applied only if the candidate passes basic area, margin and portrait-shape gates; otherwise the guide crop is retained to avoid a destructive false correction.
 - Magic Color remains selected for preview and processed export.
 - JavaScript syntax checked. Detection accuracy and perspective alignment still require physical iPhone/Android tests with glossy and patterned-background books.
+
+
+### GS-183 — Experimental local page dewarping
+- Added a local geometric correction preview and strength control to the scan workspace.
+- Added restore-original support for the most recent dewarping operation.
+- This is a lightweight approximate remap for mild curvature, not a learned or full 3D page reconstruction. Test with curved pages and verify text distortion before relying on results.
