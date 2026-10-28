@@ -29,5 +29,10 @@
 <footer>◇ File diproses lokal · Tidak ada API eksternal <small>GlassScan v0.3 · Offline beta</small></footer>
 </main>
 <dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GLASSSCAN OFFLINE</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Pemrosesan gambar berlangsung lokal. Deteksi sudut berbasis tepi adalah estimasi heuristik dan perlu diperiksa untuk dokumen yang miring/berlatar rumit. Koreksi perspektif, crop, filter warna/BW, dan pengurangan bayangan berjalan di browser. Belum ada OCR.</p></dialog>
+<dialog id="cropDialog" class="dialog glass crop-dialog">
+ <button id="cropClose" class="dialog-x" aria-label="Tutup">×</button><small>MANUAL DOCUMENT ALIGNMENT</small><h2>Atur empat sudut</h2><p class="crop-help">Geser titik cyan ke sudut kertas. Perbesar halaman jika perlu; hasil crop baru diterapkan setelah kamu menekan Terapkan.</p>
+ <div class="crop-stage"><canvas id="cropCanvas"></canvas></div>
+ <div class="crop-actions"><button id="cropAuto" class="secondary">Coba deteksi otomatis</button><button id="cropReset" class="secondary">Reset sudut</button><button id="cropApply" class="export-btn">Terapkan crop</button></div>
+ </dialog>
 <div id="toast" role="status" aria-live="polite"></div><script src="app.js"></script>
 </body></html>

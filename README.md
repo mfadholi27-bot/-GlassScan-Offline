@@ -20,3 +20,9 @@ Ini adalah **beta/prototipe**, bukan pengganti scanner komersial. Deteksi sudut 
 
 ## Privasi
 Tidak ada pengiriman gambar ke server dari aplikasi. Gambar tetap di memori/browser dan diekspor hanya saat pengguna menekan tombol ekspor.
+
+
+## Pembaruan v0.4 — editor crop manual
+- Tombol “Deteksi sudut & crop” sekarang membuka editor empat titik. Pengguna dapat menggeser setiap titik dengan sentuhan, mencoba perkiraan otomatis, mereset, lalu menerapkan crop/perspective warp.
+- Deteksi otomatis masih heuristik dan bisa salah memilih tepi; periksa posisi titik sebelum menerapkan. Editor manual adalah jalur koreksi bila deteksi otomatis gagal.
+- Ekspor JPG tetap tersedia per halaman; PDF menggabungkan halaman. Pada iOS, Safari mungkin menampilkan pratinjau/unduhan dan pengguna dapat memilih Bagikan → Simpan ke File.
