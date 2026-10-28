@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.7 · GS-197',
-  updatedAt: '29 Oktober 2026, 01:15 WIB',
+  version: 'V1.9.8 · GS-198',
+  updatedAt: '29 Oktober 2026, 00:30 WIB',
   changes: [
+   'GS-198: prototipe Ratakan Kertas lokal berbasis analisis geometri baris teks; tidak mengirim foto ke server dan menyediakan pemulihan foto asli.',
+   'GS-198: koreksi dibatasi dan hanya diterapkan bila cukup banyak baris teks konsisten; bukan model neural dewarping CamScanner dan perlu uji foto nyata.',
    'GS-197: deteksi sudut OpenCV memakai beberapa tingkat Canny agar lebih tahan terhadap kontras dan latar yang berbeda.',
    'GS-197: pemeringkatan kandidat mempertimbangkan konsistensi sisi berlawanan, kualitas sudut, luas, dan posisi; deteksi tetap heuristik dan perlu uji foto nyata.',
    'GS-196: memperbaiki tombol intensitas + agar tetap aktif hingga 200% (sebelumnya berhenti di 100%).',
