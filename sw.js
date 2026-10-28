@@ -1,5 +1,5 @@
 /* GlassScan V1.8.3 crop, JPG and effect controls cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v183-pages-branch-cache';
+const CACHE_NAME = 'glassscan-v184-pages-branch-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
