@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.6 · GS-186',
-  updatedAt: '28 Oktober 2026, 21:50 WIB',
+  version: 'V1.8.7 · GS-187',
+  updatedAt: '28 Oktober 2026, 22:05 WIB',
   changes: [
+   'GS-187: menambahkan mode Color dan Book Premium dengan perataan pencahayaan lokal, koreksi warna lembut, dan penajaman konservatif tanpa menambahkan tekstur atau tanda buatan.',
+   'GS-187: menambahkan pratinjau perbandingan asli/hasil, ekspor PNG, serta memperjelas pilihan Original, Book Premium, Color, Grayscale, dan Black & White.',
+   'GS-187: pemrosesan tetap di perangkat; deteksi sudut OpenCV.js dengan fallback heuristik dan editor empat sudut manual dipertahankan.',
    'GS-186: filter Scan Premium menambahkan koreksi kertas krem-putih, ketajaman, kotak biru bernomor dengan garis diagonal, bayangan tepi halus, dan tanda air GlassScan samar.',
    'GS-186: intensitas Scan Premium dapat diatur terpisah dari filter lain hingga 200%.',
    'GS-185: petunjuk ekspor JPG iPhone diarahkan ke Simpan Gambar agar hasil masuk ke aplikasi Foto, bukan File.',
