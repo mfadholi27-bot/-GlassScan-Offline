@@ -1,133 +1,44 @@
 (() => {
-  const $ = (id) => document.getElementById(id);
-  const cameraInput = $("cameraInput"), importInput = $("importInput");
-  const canvas = $("previewCanvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
-  let pages = [], activeIndex = -1, currentFilter = "original", toastTimer;
-
-  function toast(message) {
-    const el = $("toast"); el.textContent = message; el.classList.add("show");
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
-  }
-  $("cameraBtn").addEventListener("click", () => cameraInput.click());
-  $("importBtn").addEventListener("click", () => importInput.click());
-  cameraInput.addEventListener("change", e => loadFiles(e.target.files));
-  importInput.addEventListener("change", e => loadFiles(e.target.files));
-  $("installHint").addEventListener("click", () => $("helpDialog").showModal());
-  $("closeHelp").addEventListener("click", () => $("helpDialog").close());
-
-  async function loadFiles(fileList) {
-    const files = [...(fileList || [])].filter(f => f.type.startsWith("image/"));
-    if (!files.length) return;
-    for (const file of files) {
-      try {
-        const dataUrl = await readAsDataURL(file);
-        const img = await loadImage(dataUrl);
-        const normalized = document.createElement("canvas");
-        const maxSide = 2600, ratio = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-        normalized.width = Math.round(img.naturalWidth * ratio);
-        normalized.height = Math.round(img.naturalHeight * ratio);
-        normalized.getContext("2d").drawImage(img, 0, 0, normalized.width, normalized.height);
-        pages.push({ data: normalized.toDataURL("image/jpeg", .94), name: file.name || `scan-${pages.length+1}.jpg` });
-      } catch (err) { console.error(err); toast("Gambar tidak bisa dibuka."); }
-    }
-    activeIndex = pages.length - 1; currentFilter = "original"; setActiveFilterButton();
-    render(); updateCounters(); cameraInput.value = ""; importInput.value = "";
-    toast(`${files.length} gambar ditambahkan ke dokumen.`);
-  }
-  function readAsDataURL(file) {
-    return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
-  }
-  function loadImage(src) {
-    return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = src; });
-  }
-  function setActiveFilterButton() {
-    document.querySelectorAll(".filter-chip").forEach(b => b.classList.toggle("active", b.dataset.filter === currentFilter));
-  }
-  document.querySelectorAll(".filter-chip").forEach(btn => btn.addEventListener("click", () => {
-    currentFilter = btn.dataset.filter; setActiveFilterButton(); render();
-  }));
-
-  async function render() {
-    const hasPage = activeIndex >= 0 && pages[activeIndex];
-    $("emptyState").hidden = !!hasPage; $("previewWrap").hidden = !hasPage;
-    $("previewActions").hidden = !hasPage;
-    $("exportPdfBtn").disabled = pages.length === 0;
-    if (!hasPage) { $("previewTitle").textContent = "Belum ada dokumen"; $("thumbs").innerHTML = ""; return; }
-    const img = await loadImage(pages[activeIndex].data);
-    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
-    if (currentFilter !== "original") applyFilter(ctx, canvas.width, canvas.height, currentFilter);
-    $("previewTitle").textContent = pages[activeIndex].name || `Halaman ${activeIndex+1}`;
-    drawThumbs();
-  }
-  function applyFilter(context, width, height, mode) {
-    const imageData = context.getImageData(0, 0, width, height), d = imageData.data;
-    if (mode === "gray") {
-      for (let i=0;i<d.length;i+=4) { const y=.299*d[i]+.587*d[i+1]+.114*d[i+2]; d[i]=d[i+1]=d[i+2]=y; }
-    } else if (mode === "enhance") {
-      for (let i=0;i<d.length;i+=4) {
-        for (let c=0;c<3;c++) { const v=d[i+c]/255; d[i+c]=Math.max(0,Math.min(255,((v-.5)*1.35+.5)*255)); }
-      }
-    } else if (mode === "bw") {
-      // Otsu thresholding on local canvas pixels; no network or external model.
-      const hist = new Uint32Array(256); let total=width*height, sum=0;
-      for (let i=0;i<d.length;i+=4) { const y=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]); hist[y]++; sum+=y; }
-      let sumB=0, wB=0, maxVar=0, threshold=160;
-      for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;sumB+=t*hist[t];const mB=sumB/wB,mF=(sum-sumB)/wF;const variance=wB*wF*(mB-mF)*(mB-mF);if(variance>maxVar){maxVar=variance;threshold=t;}}
-      for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2];const v=y>threshold?255:0;d[i]=d[i+1]=d[i+2]=v;}
-    }
-    context.putImageData(imageData,0,0);
-  }
-  function drawThumbs() {
-    const container=$("thumbs");container.innerHTML="";
-    pages.forEach((page,index)=>{
-      const button=document.createElement("button");button.className="thumb"+(index===activeIndex?" active":"");button.title=`Buka halaman ${index+1}`;
-      const c=document.createElement("canvas");button.appendChild(c);const badge=document.createElement("span");badge.textContent=index+1;button.appendChild(badge);
-      loadImage(page.data).then(img=>{c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);});
-      button.addEventListener("click",()=>{activeIndex=index;render();});container.appendChild(button);
-    });
-  }
-  function updateCounters(){const n=pages.length;$("pageCount").textContent=`${n} halaman`; $("exportPdfBtn").disabled=!n;}
-  $("deletePageBtn").addEventListener("click",()=>{if(activeIndex<0)return;pages.splice(activeIndex,1);activeIndex=pages.length?Math.min(activeIndex,pages.length-1):-1;render();updateCounters();toast("Halaman dihapus.");});
-  $("saveImageBtn").addEventListener("click",()=>{if(activeIndex<0)return;const a=document.createElement("a");a.href=canvas.toDataURL("image/jpeg",.94);a.download=`glassscan-${activeIndex+1}.jpg`;a.click();toast("JPG diproses dan disiapkan.");});
-  $("exportPdfBtn").addEventListener("click", async()=>{
-    if(!pages.length)return;
-    const button=$("exportPdfBtn");button.disabled=true;button.textContent="Menyiapkan PDF…";
-    try {
-      const blobs=[];
-      for(const p of pages){const img=await loadImage(p.data);const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;const cctx=c.getContext("2d");cctx.drawImage(img,0,0);if(currentFilter!=="original")applyFilter(cctx,c.width,c.height,currentFilter);blobs.push({dataUrl:c.toDataURL("image/jpeg",.92),w:c.width,h:c.height});}
-      const pdf=makePdf(blobs);const blob=new Blob([pdf],{type:"application/pdf"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="GlassScan-Document.pdf";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);toast("PDF berhasil dibuat di perangkat.");
-    }catch(err){console.error(err);toast("PDF gagal dibuat. Coba kurangi jumlah atau ukuran halaman.");}
-    finally{button.innerHTML="<span>⇩</span> Export PDF";button.disabled=!pages.length;}
-  });
-  // Minimal PDF 1.4 writer: embeds each page as a JPEG XObject. No PDF service/library/network.
-  function makePdf(items){
-    const enc=new TextEncoder();const objects=[];const pageIds=[];
-    const add=(bytes)=>{objects.push(bytes instanceof Uint8Array?bytes:enc.encode(bytes));return objects.length;};
-    add("<< /Type /Catalog /Pages 2 0 R >>");
-    add(""); // Pages object replaced after page IDs are known
-    items.forEach((item)=>{
-      const raw=atob(item.dataUrl.split(",")[1]), jpg=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)jpg[i]=raw.charCodeAt(i);
-      const imgId=objects.length+1;
-      const imgHeader=enc.encode(`<< /Type /XObject /Subtype /Image /Width ${item.w} /Height ${item.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
-      const imgFooter=enc.encode("\nendstream");
-      const imgObj=concat([enc.encode(`${imgId} 0 obj\n`),imgHeader,jpg,imgFooter,enc.encode("\nendobj\n")]);objects.push(imgObj);
-      const pageId=objects.length+1, contentId=pageId+1;pageIds.push(pageId);
-      const pageW=595.28,pageH=841.89,scale=Math.min(pageW/item.w,pageH/item.h),w=item.w*scale,h=item.h*scale,x=(pageW-w)/2,y=(pageH-h)/2;
-      add(`${pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im${pageIds.length} ${imgId} 0 R >> >> /Contents ${contentId} 0 R >>\nendobj\n`);
-      const stream=`q\n${w} 0 0 ${h} ${x} ${y} cm\n/Im${pageIds.length} Do\nQ\n`;
-      add(`${contentId} 0 obj\n<< /Length ${enc.encode(stream).length} >>\nstream\n${stream}endstream\nendobj\n`);
-    });
-    objects[1]=enc.encode(`2 0 obj\n<< /Type /Pages /Kids [${pageIds.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>\nendobj\n`);
-    let parts=[enc.encode("%PDF-1.4\n%GlassScan\n")],offset=parts[0].length,offsets=[0];
-    objects.forEach((obj,i)=>{offsets.push(offset);const prefix=enc.encode(`${i+1} 0 obj\n`);const suffix=enc.encode("\nendobj\n");parts.push(prefix,obj,suffix);offset+=prefix.length+obj.length+suffix.length;});
-    const xrefOffset=offset;let xref=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;for(let i=1;i<offsets.length;i++)xref+=`${String(offsets[i]).padStart(10,"0")} 00000 n \n`;
-    xref+=`trailer\n<< /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-    parts.push(enc.encode(xref));return concat(parts);
-  }
-  function concat(arr){const total=arr.reduce((n,a)=>n+a.length,0),out=new Uint8Array(total);let pos=0;for(const a of arr){out.set(a,pos);pos+=a.length;}return out;}
-  if("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-  }
-  updateCounters();
+ const $=id=>document.getElementById(id);
+ const cameraInput=$("cameraInput"),importInput=$("importInput"),canvas=$("previewCanvas"),ctx=canvas.getContext("2d",{willReadFrequently:true});
+ let pages=[],active=-1,filter="original",stream=null,raf=0,auto=false,stableFrames=0,lastQuad=null,lastAutoCapture=0,toastTimer=null,facing="environment",rotation=0;
+ const toast=m=>{const e=$("toast");e.textContent=m;e.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove("show"),2600)};
+ $("cameraBtn").onclick=startCamera; $("importBtn").onclick=()=>importInput.click(); cameraInput.onchange=e=>loadFiles(e.target.files);importInput.onchange=e=>loadFiles(e.target.files);
+ $("helpBtn").onclick=()=>$("helpDialog").showModal();$("closeHelp").onclick=()=>$("helpDialog").close();
+ $("closeCamera").onclick=stopCamera;
+ $("switchCamera").onclick=async()=>{facing=facing==="environment"?"user":"environment";await stopCamera(false);await startCamera()};
+ $("captureBtn").onclick=()=>captureFromCamera();
+ $("autoBtn").onclick=()=>{auto=!auto;$("autoBtn").textContent=`Auto: ${auto?"ON":"OFF"}`;$("autoBtn").classList.toggle("on",auto);stableFrames=0;toast(auto?"Auto capture aktif":"Auto capture nonaktif")};
+ document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll(".filter").forEach(x=>x.classList.toggle("active",x===b));render()});
+ $("deleteBtn").onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast("Halaman dihapus")};
+ $("rotateBtn").onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast("Halaman diputar")};
+ $("saveJpgBtn").onclick=()=>{if(active<0)return;exportJpg(active)};
+ $("exportAllJpg").onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*350));toast("Menyiapkan file JPG satu per satu")};
+ $("exportPdf").onclick=exportPdf;
+ async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith("image/"));for(const f of fs){try{const url=await fileData(f),img=await image(url);const c=document.createElement("canvas"),r=Math.min(1,2800/Math.max(img.naturalWidth,img.naturalHeight));c.width=Math.round(img.naturalWidth*r);c.height=Math.round(img.naturalHeight*r);c.getContext("2d").drawImage(img,0,0,c.width,c.height);pages.push({data:c.toDataURL("image/jpeg",.95),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast("Tidak dapat membaca gambar")}}if(fs.length){active=pages.length-1;filter="original";syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan`)}cameraInput.value="";importInput.value=""}
+ const fileData=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)}),image=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+ async function startCamera(){if(!navigator.mediaDevices?.getUserMedia){toast("Kamera live tidak didukung. Gunakan Impor gambar.");cameraInput.click();return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:2560}},audio:false});const v=$("video");v.srcObject=stream;await v.play();$("cameraPanel").hidden=false;$("cameraPlaceholder").hidden=true;drawDetection();toast("Kamera aktif. Arahkan ke tepi kertas.")}catch(e){console.warn(e);toast("Izin kamera ditolak atau kamera tidak tersedia. Gunakan Impor gambar.");$("cameraInput").click()}}
+ async function stopCamera(hide=true){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}const v=$("video");v.srcObject=null;if(hide)$("cameraPanel").hidden=true}
+ function drawDetection(){const v=$("video"),c=$("edgeCanvas"),cc=c.getContext("2d",{willReadFrequently:true});if(!stream)return;if(v.videoWidth&&v.videoHeight){const w=320,h=Math.round(320*v.videoHeight/v.videoWidth);c.width=w;c.height=h;cc.clearRect(0,0,w,h);
+   // Lightweight local contrast-edge preview; it is an estimate, not a robust quadrilateral detector.
+   const sample=document.createElement("canvas");sample.width=160;sample.height=Math.round(160*v.videoHeight/v.videoWidth);const sc=sample.getContext("2d",{willReadFrequently:true});sc.drawImage(v,0,0,sample.width,sample.height);const im=sc.getImageData(0,0,sample.width,sample.height),d=im.data;let edge=0;
+   for(let y=2;y<sample.height-2;y+=2)for(let x=2;x<sample.width-2;x+=2){const p=(y*sample.width+x)*4;const lum=(i)=>.299*d[i]+.587*d[i+1]+.114*d[i+2];const dx=Math.abs(lum(p+4)-lum(p-4)),dy=Math.abs(lum(p+sample.width*4)-lum(p-sample.width*4));if(dx+dy>95)edge++}
+   cc.strokeStyle="#63e6ff";cc.lineWidth=2;cc.setLineDash([6,4]);cc.strokeRect(w*.12,h*.13,w*.76,h*.74);cc.setLineDash([]);const confidence=edge>100?"DOCUMEN TERLIHAT":"CARI TEPI DOKUMEN";$("detectStatus").textContent=confidence;$("detectStatus").style.color=edge>100?"#7fffc6":"#ffe08a";document.querySelector(".hud-dot").style.background=edge>100?"#53efb8":"#ffc95c";
+   // Stability is only a rough signal from edge density, not actual corner tracking.
+   if(edge>130)stableFrames++;else stableFrames=0;
+   if(auto&&stableFrames>70&&Date.now()-lastAutoCapture>3500){lastAutoCapture=Date.now();captureFromCamera()}
+  }raf=requestAnimationFrame(drawDetection)}
+ async function captureFromCamera(){const v=$("video");if(!stream||!v.videoWidth){toast("Kamera belum siap");return}const c=document.createElement("canvas");const scale=Math.min(1,2800/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*scale);c.height=Math.round(v.videoHeight*scale);c.getContext("2d").drawImage(v,0,0,c.width,c.height);pages.push({data:c.toDataURL("image/jpeg",.96),name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,"-")}.jpg`,rotation:0});active=pages.length-1;render();counts();stableFrames=0;toast("Foto diambil. Periksa dan rapikan hasilnya.");if(auto){auto=false;$("autoBtn").textContent="Auto: OFF";$("autoBtn").classList.remove("on")}}
+ function syncFilter(){document.querySelectorAll(".filter").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter))}
+ async function render(){const has=active>=0&&pages[active];$("emptyState").hidden=!!has;$("previewWrap").hidden=!has;$("previewActions").hidden=!has;$("exportPdf").disabled=!pages.length;$("exportAllJpg").disabled=!pages.length;if(!has){$("previewTitle").textContent="Belum ada dokumen";$("thumbs").innerHTML="";return}const img=await image(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();if(filter!=="original")applyFilter(ctx,canvas.width,canvas.height,filter);$("previewTitle").textContent=pages[active].name;drawThumbs()}
+ function applyFilter(c,w,h,mode){const im=c.getImageData(0,0,w,h),d=im.data;if(mode==="gray"||mode==="enhance"){for(let i=0;i<d.length;i+=4){let y=.299*d[i]+.587*d[i+1]+.114*d[i+2];if(mode==="enhance")y=Math.max(0,Math.min(255,(y-128)*1.38+128));d[i]=d[i+1]=d[i+2]=y}}else if(mode==="bw"){const hist=new Uint32Array(256),n=w*h;let sum=0;for(let i=0;i<d.length;i+=4){const y=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);hist[y]++;sum+=y}let sb=0,wb=0,mx=0,t=150;for(let i=0;i<256;i++){wb+=hist[i];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=i*hist[i];const mb=sb/wb,mf=(sum-sb)/wf,v=wb*wf*(mb-mf)**2;if(v>mx){mx=v;t=i}}for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2],v=y>t?255:0;d[i]=d[i+1]=d[i+2]=v}}c.putImageData(im,0,0)}
+ function drawThumbs(){const box=$("thumbs");box.innerHTML="";pages.forEach((p,i)=>{const b=document.createElement("button");b.className="thumb"+(i===active?" active":"");const tc=document.createElement("canvas"),badge=document.createElement("span");badge.textContent=i+1;b.append(tc,badge);image(p.data).then(img=>{tc.width=img.naturalWidth;tc.height=img.naturalHeight;tc.getContext("2d").drawImage(img,0,0)});b.onclick=()=>{active=i;render()};box.append(b)})}
+ function counts(){$("pageCount").textContent=`${pages.length} halaman`;$("exportPdf").disabled=!pages.length;$("exportAllJpg").disabled=!pages.length}
+ async function processedData(i,quality=.94){const p=pages[i],img=await image(p.data),rot=p.rotation||0,sw=img.naturalWidth,sh=img.naturalHeight,c=document.createElement("canvas");c.width=rot%180?sh:sw;c.height=rot%180?sw:sh;const x=c.getContext("2d");x.translate(c.width/2,c.height/2);x.rotate(rot*Math.PI/180);x.drawImage(img,-sw/2,-sh/2);if(i===active&&filter!=="original")applyFilter(x,c.width,c.height,filter);return c.toDataURL("image/jpeg",quality)}
+ async function exportJpg(i){try{const url=await processedData(i,.96),a=document.createElement("a");a.href=url;a.download=(pages[i].name||`GlassScan-${i+1}`).replace(/\.[^.]+$/,"")+".jpg";document.body.append(a);a.click();a.remove()}catch(e){toast("Gagal membuat JPG")}}
+ async function exportPdf(){if(!pages.length)return;const b=$("exportPdf");b.disabled=true;b.textContent="Menyiapkan…";try{const imgs=[];for(let i=0;i<pages.length;i++){const data=await processedData(i,.92),img=await image(data);imgs.push({data,w:img.naturalWidth,h:img.naturalHeight})}const blob=new Blob([makePdf(imgs)],{type:"application/pdf"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="GlassScan-Document.pdf";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);toast("PDF dibuat secara lokal")}catch(e){console.error(e);toast("PDF gagal dibuat. Coba kurangi ukuran/jumlah halaman")}finally{b.textContent="⇩ Export PDF";b.disabled=!pages.length}}
+ function makePdf(items){const enc=new TextEncoder(),objs=[];const add=x=>{objs.push(x instanceof Uint8Array?x:enc.encode(x));return objs.length};add("<< /Type /Catalog /Pages 2 0 R >>");add("");const ids=[];items.forEach((it,k)=>{const raw=atob(it.data.split(",")[1]),jpg=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)jpg[i]=raw.charCodeAt(i);const imgId=objs.length+1;objs.push(join([enc.encode(`${imgId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${it.w} /Height ${it.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`),jpg,enc.encode("\nendstream\nendobj\n")]));const pid=objs.length+1,cid=pid+1;ids.push(pid);const pw=595.28,ph=841.89,s=Math.min(pw/it.w,ph/it.h),w=it.w*s,h=it.h*s,x=(pw-w)/2,y=(ph-h)/2;add(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${k+1} ${imgId} 0 R >> >> /Contents ${cid} 0 R >>\nendobj\n`);const stream=`q\n${w} 0 0 ${h} ${x} ${y} cm\n/Im${k+1} Do\nQ\n`;add(`${cid} 0 obj\n<< /Length ${enc.encode(stream).length} >>\nstream\n${stream}endstream\nendobj\n`)});objs[1]=enc.encode(`2 0 obj\n<< /Type /Pages /Kids [${ids.map(i=>i+" 0 R").join(" ")}] /Count ${ids.length} >>\nendobj\n`);let parts=[enc.encode("%PDF-1.4\n%GlassScan\n")],off=parts[0].length,offsets=[0];objs.forEach((o,i)=>{offsets.push(off);const p=enc.encode(`${i+1} 0 obj\n`),s=enc.encode("\nendobj\n");parts.push(p,o,s);off+=p.length+o.length+s.length});const xref=off;let t=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`;for(let i=1;i<offsets.length;i++)t+=`${String(offsets[i]).padStart(10,"0")} 00000 n \n`;t+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;parts.push(enc.encode(t));return join(parts)}
+ function join(arr){const n=arr.reduce((a,b)=>a+b.length,0),o=new Uint8Array(n);let p=0;for(const a of arr){o.set(a,p);p+=a.length}return o}
+ if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+ counts();
 })();

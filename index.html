@@ -1,84 +1,33 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="GlassScan">
-  <meta name="description" content="Scanner dokumen lokal dengan filter hitam putih dan ekspor PDF.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
-  <title>GlassScan Offline</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="styles.css">
+<title>GlassScan Offline · v2</title>
 </head>
 <body>
-  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
-  <main class="app-shell">
-    <header class="topbar">
-      <div class="brand-mark" aria-hidden="true"><span class="scan-corner"></span><span class="scan-dot"></span></div>
-      <div class="brand-copy"><div class="eyebrow">PRIVATE · ON-DEVICE</div><h1>GlassScan <span>Offline</span></h1></div>
-      <button id="installHint" class="icon-button" title="Petunjuk instalasi" aria-label="Petunjuk instalasi">＋</button>
-    </header>
-
-    <section class="hero glass">
-      <div class="hero-content">
-        <div class="pill"><span class="status-dot"></span> Pemrosesan lokal</div>
-        <h2>Scan clean.<br><span>Stay private.</span></h2>
-        <p>Ubah foto dokumen menjadi hasil scan yang tajam, langsung di perangkat.</p>
-        <div class="hero-stats"><div><strong>0</strong><small>Cloud upload</small></div><div><strong>4</strong><small>Mode gambar</small></div><div><strong>PDF</strong><small>Multi halaman</small></div></div>
-      </div>
-      <div class="hero-art" aria-hidden="true"><div class="art-ring ring-one"></div><div class="art-ring ring-two"></div><div class="paper-card"><div class="paper-top"></div><i></i><i></i><i class="short"></i><div class="paper-sign"></div></div><div class="art-spark spark-one">✦</div><div class="art-spark spark-two">✧</div></div>
-    </section>
-
-    <section class="section-heading"><div><div class="eyebrow">WORKSPACE</div><h2>Document studio</h2></div><span id="pageCount" class="count-badge">0 halaman</span></section>
-
-    <section class="capture-grid">
-      <button id="cameraBtn" class="action-card glass primary-card">
-        <span class="action-icon camera-icon">⌾</span><span class="action-title">Ambil foto</span><span class="action-sub">Gunakan kamera iPhone</span><span class="card-arrow">↗</span>
-      </button>
-      <button id="importBtn" class="action-card glass">
-        <span class="action-icon import-icon">↑</span><span class="action-title">Impor gambar</span><span class="action-sub">Pilih foto dokumen</span><span class="card-arrow">↗</span>
-      </button>
-    </section>
-    <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
-    <input id="importInput" type="file" accept="image/*" multiple hidden>
-
-    <section class="section-heading tools-heading"><div><div class="eyebrow">IMAGE LAB</div><h2>Enhance scan</h2></div><span class="tiny-label">OFFLINE FILTERS</span></section>
-    <section class="filter-row" aria-label="Filter gambar">
-      <button class="filter-chip active" data-filter="original"><span class="filter-preview preview-original">Aa</span>Original</button>
-      <button class="filter-chip" data-filter="bw"><span class="filter-preview preview-bw">Aa</span>Black &amp; white</button>
-      <button class="filter-chip" data-filter="gray"><span class="filter-preview preview-gray">Aa</span>Grayscale</button>
-      <button class="filter-chip" data-filter="enhance"><span class="filter-preview preview-enhance">Aa</span>Enhance</button>
-    </section>
-
-    <section class="preview-panel glass">
-      <div class="panel-head"><div><div class="eyebrow">PREVIEW</div><h3 id="previewTitle">Belum ada dokumen</h3></div><span class="live-badge"><span></span> LOCAL</span></div>
-      <div id="emptyState" class="empty-state"><div class="empty-scan-icon"><span></span></div><strong>Siap memindai</strong><p>Ambil foto atau impor gambar untuk mulai.</p></div>
-      <div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div>
-      <div id="previewActions" class="preview-actions" hidden>
-        <button id="saveImageBtn" class="secondary-button">Simpan JPG</button>
-        <button id="deletePageBtn" class="danger-button">Hapus halaman</button>
-      </div>
-      <div id="thumbs" class="thumbs"></div>
-    </section>
-
-    <section class="export-panel glass">
-      <div class="export-copy"><div class="eyebrow">YOUR DOCUMENTS</div><h3>Export your scan</h3><p>Gabungkan halaman pilihan menjadi satu file PDF.</p></div>
-      <button id="exportPdfBtn" class="export-button" disabled><span>⇩</span> Export PDF</button>
-    </section>
-
-    <footer><span class="footer-lock">◇</span> Data tetap di perangkat · Tidak ada API eksternal <span class="version">v0.1 prototype</span></footer>
-  </main>
-
-  <dialog id="helpDialog" class="help-dialog glass">
-    <button id="closeHelp" class="dialog-close" aria-label="Tutup">×</button>
-    <div class="eyebrow">MULAI DI IPHONE</div><h2>Jalankan GlassScan</h2>
-    <ol><li>Unggah folder ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages untuk repositori tersebut.</li><li>Buka alamat HTTPS-nya di Safari dan pilih <b>Bagikan → Tambahkan ke Layar Utama</b>.</li><li>Buka sekali saat online agar aset tersimpan; setelah itu coba mode pesawat.</li></ol>
-    <p class="notice">Catatan: ini prototipe web/PWA, bukan aplikasi iOS native. Kamera dan pemasangan offline memerlukan halaman HTTPS; membuka index.html langsung dari Files tidak cukup.</p>
-  </dialog>
-  <div id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
-</body>
-</html>
+<div class="ambient a"></div><div class="ambient b"></div>
+<main class="shell">
+<header class="topbar"><div class="logo"><span>⌗</span></div><div class="brand"><small>PRIVATE DOCUMENT STUDIO</small><h1>GlassScan <em>Offline</em></h1></div><button class="round" id="helpBtn" aria-label="Petunjuk">?</button></header>
+<section class="hero glass"><div class="hero-copy"><span class="status"><i></i> ON-DEVICE WORKSPACE</span><h2>Every page.<br><b>Perfectly clear.</b></h2><p>Scan dokumen dengan alur kerja yang bersih, privat, dan praktis.</p><div class="hero-pills"><span>◈ Local processing</span><span>▤ PDF + JPG</span></div></div><div class="hero-visual" aria-hidden="true"><div class="orb"></div><div class="sheet"><div class="sheet-head"></div><i></i><i></i><i class="w"></i><i></i><div class="signature"></div><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div><b>✦</b></div></section>
+<section class="section-title"><div><small>WORKSPACE</small><h2>Scan studio</h2></div><span class="count" id="pageCount">0 halaman</span></section>
+<section class="capture-grid"><button class="capture glass featured" id="cameraBtn"><span class="capture-icon">⌾</span><b>Live scanner</b><small>Kamera + deteksi tepi</small><span class="arrow">↗</span></button><button class="capture glass" id="importBtn"><span class="capture-icon violet">↑</span><b>Impor gambar</b><small>Foto dari galeri</small><span class="arrow">↗</span></button></section>
+<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="importInput" type="file" accept="image/*" multiple hidden>
+<section id="cameraPanel" class="camera-panel glass" hidden>
+ <div class="camera-head"><div><small>LIVE SCANNER</small><h3>Ratakan dokumen</h3></div><button id="closeCamera" class="round">×</button></div>
+ <div class="camera-stage"><video id="video" autoplay playsinline muted></video><canvas id="edgeCanvas"></canvas><div class="camera-placeholder" id="cameraPlaceholder"><span class="focus-frame"></span><b>Menyiapkan kamera…</b><small>Letakkan dokumen di dalam bingkai</small></div><div class="camera-hud"><span id="detectStatus">MENUNGGU DOKUMEN</span><span class="hud-dot"></span></div></div>
+ <div class="camera-controls"><button id="switchCamera" class="secondary">Ganti kamera</button><button id="captureBtn" class="shutter" aria-label="Ambil gambar"><span></span></button><button id="autoBtn" class="secondary auto-toggle">Auto: OFF</button></div>
+ <p class="camera-note">Deteksi garis ini merupakan estimasi berbasis kontras di browser. Untuk deteksi sudut OpenCV tingkat profesional, lihat README dan tahap integrasi berikutnya.</p>
+</section>
+<section class="section-title filter-heading"><div><small>IMAGE LAB</small><h2>Enhance scan</h2></div><span class="micro">LOCAL FILTERS</span></section>
+<section class="filters"><button class="filter active" data-filter="original"><span class="sample orig">Aa</span>Original</button><button class="filter" data-filter="bw"><span class="sample bw">Aa</span>Black &amp; white</button><button class="filter" data-filter="gray"><span class="sample gray">Aa</span>Grayscale</button><button class="filter" data-filter="enhance"><span class="sample enhance">Aa</span>Enhance</button></section>
+<section class="preview glass"><div class="preview-head"><div><small>DOCUMENT PREVIEW</small><h3 id="previewTitle">Belum ada dokumen</h3></div><span class="local-badge"><i></i> LOCAL</span></div>
+<div id="emptyState" class="empty"><div class="empty-icon"><span></span></div><b>Siap memindai</b><p>Gunakan kamera atau impor gambar untuk memulai.</p></div><div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div>
+<div class="preview-actions" id="previewActions" hidden><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90°</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
+<section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>⇩ Export PDF</button></div></section>
+<footer>◇ File diproses lokal · Tidak ada API eksternal <small>GlassScan v0.2 · Prototype</small></footer>
+</main>
+<dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GLASSSCAN OFFLINE</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Kamera live memerlukan HTTPS dan izin kamera. Jika kamera tidak didukung dalam konteks ini, gunakan Impor gambar. Deteksi sudut lanjutan dan OCR belum tersedia di prototipe ini.</p></dialog>
+<div id="toast" role="status" aria-live="polite"></div><script src="app.js"></script>
+</body></html>

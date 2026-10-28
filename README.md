@@ -1,44 +1,32 @@
-# GlassScan Offline — iPhone-ready starter
+# GlassScan Offline v0.2 — iPhone PWA prototype
 
-Prototipe PWA scanner dokumen dengan tema Glassmorphism. Kode UI dan pemrosesan gambar di paket ini berjalan di browser; tidak ada API eksternal, analitik, iklan, atau CDN.
+This is a local-first browser prototype with a glassmorphism UI.
 
-## Fitur yang tersedia dalam prototipe
-- Mengambil gambar melalui pemilih kamera iPhone (`capture="environment"`) atau mengimpor foto.
-- Menyimpan beberapa halaman dalam sesi browser.
-- Filter Original, Black & White (ambang Otsu), Grayscale, dan Enhance.
-- Menyimpan pratinjau sebagai JPG.
-- Membuat PDF multipage secara lokal menggunakan pembuat PDF minimal yang tertanam di `app.js`.
-- PWA cache untuk aset aplikasi setelah pertama kali dibuka lewat HTTPS.
+## Added in v0.2
+- Live camera preview via `getUserMedia` on HTTPS, with manual capture.
+- A lightweight live edge/contrast indicator and approximate overlay frame.
+- Experimental auto-capture based on edge density (not a robust document-corner detector).
+- Import multiple photos.
+- Original, black & white (Otsu), grayscale and contrast-enhance filters.
+- Rotate active page.
+- Export current/all images as JPG; export multiple pages as a locally generated PDF.
+- PWA service worker cache for app assets.
 
-## Batasan yang belum diimplementasikan
-- Belum ada deteksi sudut otomatis dan crop perspektif.
-- Belum ada OCR.
-- Filter Enhance adalah peningkatan kontras sederhana, bukan penghilang bayangan tingkat lanjut.
-- Data halaman disimpan dalam memori selama sesi; belum ada perpustakaan dokumen permanen/IndexedDB.
-- Ini bukan aplikasi iOS native/App Store. Kamera dan service worker tidak bekerja jika `index.html` dibuka langsung dari aplikasi Files (`file://`).
-- PWA offline di iPhone harus pertama kali diakses melalui origin HTTPS dan aset berhasil tercache. Pengujian mode pesawat diperlukan.
-- Fitur ekspor unduhan di iOS dapat berbeda menurut versi Safari; jika dialog unduhan tidak muncul, gunakan menu Share atau uji di Safari.
+## Important technical limitations
+- The live overlay is a guide rectangle, **not actual four-corner tracking**. It does not yet perform reliable quadrilateral detection, automatic crop, or perspective correction.
+- The auto-capture toggle is experimental and based on rough edge density; it can capture at the wrong time. Manual capture is recommended.
+- No OCR, shadow-removal model, or permanent document library yet.
+- The PDF embeds processed page images; it is image-based, not searchable OCR PDF.
+- Camera and service worker require HTTPS. Opening `index.html` directly in iOS Files will not enable live camera.
+- iOS download behavior differs by Safari version. Test export on the target iPhone.
+- PWA offline mode requires first loading from HTTPS and successfully caching the assets.
 
-## Jalankan dari iPhone
-1. Unggah isi folder ini ke repositori GitHub milikmu (bisa lewat Safari/GitHub).
-2. Di repo GitHub, buka **Settings → Pages**, pilih branch dan folder root, lalu aktifkan Pages.
-3. Tunggu situs HTTPS diterbitkan, kemudian buka URL Pages di Safari.
-4. Pilih **Bagikan → Tambahkan ke Layar Utama**.
-5. Buka aplikasi sekali saat online, lalu tes memindai dan ekspor.
-6. Aktifkan Mode Pesawat dan uji ulang. Jangan simpan dokumen penting sebelum memastikan ekspor dan cache bekerja di perangkatmu.
+## Run from iPhone only
+1. Extract the ZIP in Files.
+2. Create a GitHub repository in Safari.
+3. Upload all files from this folder into the repository root. Do not upload private scans.
+4. Open repository **Settings → Pages**, deploy from the main branch and root folder.
+5. Open the HTTPS Pages URL in Safari, grant camera permission, and test.
+6. Add to Home Screen if desired. Open once online, then test in Airplane Mode.
 
-## Privasi
-- Aplikasi tidak mengirim gambar ke server.
-- Koneksi pertama ke GitHub Pages diperlukan untuk memuat situs dan cache aset. Setelah cache berhasil, aset statis disediakan oleh service worker.
-- Jangan mengunggah dokumen sensitif ke repositori publik. Repositori hanya berisi kode, bukan hasil scan.
-
-## Struktur
-- `index.html` — struktur aplikasi
-- `styles.css` — desain Glassmorphism responsif
-- `app.js` — impor gambar, filter, halaman, dan ekspor PDF lokal
-- `manifest.webmanifest` — metadata PWA
-- `sw.js` — cache offline
-- `icon.svg` — ikon aplikasi
-
-## Lisensi
-Starter ini dibuat untuk prototipe dan boleh dimodifikasi. Jika mengambil kode/komponen dari proyek pihak ketiga, tambahkan atribusi dan ikuti lisensi proyek tersebut. Paket ini tidak menyertakan kode pihak ketiga.
+No API endpoints, analytics, or external CDNs are used by this prototype. The first visit still needs internet to load the hosted app.
