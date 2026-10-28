@@ -12,7 +12,7 @@ function syncEffectPanel(){const panel=$('effectControlPanel');if(!panel)return;
 $('correctBtn').onclick=openCropEditor;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').onclick=()=>{if(!cropImage)return;const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Perkiraan sudut dimuat. Periksa dan geser titik ke tepi kertas.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
 $('deleteBtn').onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast('Halaman dihapus')};$('rotateBtn').onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast('Halaman diputar')};$('saveJpgBtn').onclick=()=>active>=0&&exportJpg(active);$('exportAllJpg').onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*400));toast('Menyiapkan file JPG satu per satu')};$('exportPdf').onclick=exportPdf;
 const readFile=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
-async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith('image/'));for(const f of fs){try{const im=await loadImage(await readFile(f)),c=document.createElement('canvas'),s=Math.min(1,2600/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);pages.push({data:c.toDataURL('image/jpeg',.96),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast('Gagal membaca gambar')}}if(fs.length){active=pages.length-1;filter='original';syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan. Tekan Deteksi sudut & crop.`)}$('cameraInput').value='';$('importInput').value=''}
+async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith('image/'));for(const f of fs){try{const im=await loadImage(await readFile(f)),c=document.createElement('canvas'),s=Math.min(1,3200/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);pages.push({data:c.toDataURL('image/jpeg',.96),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast('Gagal membaca gambar')}}if(fs.length){active=pages.length-1;filter='original';compareOriginal=false;syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan. Tekan Deteksi sudut & crop.`)}$('cameraInput').value='';$('importInput').value=''}
 async function startCamera(){if(!navigator.mediaDevices?.getUserMedia){toast('Live camera perlu HTTPS. Gunakan impor gambar.');$('cameraInput').click();return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:2560}},audio:false});const v=$('video');v.srcObject=stream;await v.play();$('cameraPanel').hidden=false;$('cameraPlaceholder').hidden=true;drawLive();toast('Kamera aktif — arahkan dokumen ke dalam bingkai tetap.')}catch(e){console.warn(e);toast('Izin kamera ditolak/tidak tersedia. Gunakan Impor gambar.');$('cameraInput').click()}}
 async function stopCamera(hide=true){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null;if(hide)$('cameraPanel').hidden=true}
 async function openCropEditor(){if(active<0)return;try{cropImage=await loadImage(pages[active].data);let q=null;try{q=detectQuad(cropImage)}catch(e){}cropQuad=validQuad(q,cropImage)?q:defaultQuad(cropImage);drawCropEditor();$('cropDialog').showModal()}catch(e){toast('Gagal membuka editor crop')}}
@@ -209,7 +209,7 @@ function capture(){
  let ex=(fr.right-sr.left+offX)/scale,ey=(fr.bottom-sr.top+offY)/scale;
  sx=clamp(sx,0,v.videoWidth-1);sy=clamp(sy,0,v.videoHeight-1);
  ex=clamp(ex,sx+1,v.videoWidth);ey=clamp(ey,sy+1,v.videoHeight);
- const sw=ex-sx,sh=ey-sy,down=Math.min(1,2600/Math.max(sw,sh));
+ const sw=ex-sx,sh=ey-sy,down=Math.min(1,3200/Math.max(sw,sh));
  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*down));c.height=Math.max(1,Math.round(sh*down));
  c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
  let output=c,autoStraightened=false;
@@ -230,7 +230,7 @@ function capture(){
  }catch(e){console.warn('Auto perspective correction skipped',e)}
  const data=typeof output==='string'?output:output.toDataURL('image/jpeg',.97);
  pages.push({data,name:'GlassScan_'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg',rotation:0});
- active=pages.length-1;filter='magic';syncFilter();render();counts();
+ active=pages.length-1;filter='magic';compareOriginal=false;syncFilter();render();counts();
  toast(autoStraightened?'Foto langsung dipotong, diluruskan, dan Magic Color diterapkan.':'Foto langsung dipotong mengikuti bingkai dan Magic Color diterapkan. Sudut buku belum cukup meyakinkan untuk diluruskan otomatis; gunakan Deteksi sudut & crop bila perlu.')
 }
 // Solve 8-parameter homography from destination points to source points.
