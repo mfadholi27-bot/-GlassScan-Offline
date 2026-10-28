@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.7 · GS-187',
-  updatedAt: '28 Oktober 2026, 22:05 WIB',
+  version: 'V1.8.8 · GS-188',
+  updatedAt: '28 Oktober 2026, 22:35 WIB',
   changes: [
+   'GS-188: filter Adaptive B&W memakai ambang lokal berdasarkan pencahayaan setempat untuk membantu teks di area berbayang; pemrosesan klasik deterministik, bukan model AI terlatih.',
+   'GS-188: cache offline diperbarui ke GS-188. Model AI terlatih untuk deteksi/pemulihan gambar belum dibundel; gunakan deteksi OpenCV dan koreksi sudut manual untuk foto sulit.',
    'GS-187: menambahkan mode Color dan Book Premium dengan perataan pencahayaan lokal, koreksi warna lembut, dan penajaman konservatif tanpa menambahkan tekstur atau tanda buatan.',
    'GS-187: menambahkan pratinjau perbandingan asli/hasil, ekspor PNG, serta memperjelas pilihan Original, Book Premium, Color, Grayscale, dan Black & White.',
    'GS-187: pemrosesan tetap di perangkat; deteksi sudut OpenCV.js dengan fallback heuristik dan editor empat sudut manual dipertahankan.',
