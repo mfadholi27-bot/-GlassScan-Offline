@@ -105,8 +105,11 @@ async function dewarpPageByTextLines(image){
  for(let y=0;y<srcH;y++)for(let x=0;x<srcW;x++){
   const bx=Math.min(bins-1,Math.max(0,(x*sxScale/step))),i0=Math.floor(bx),i1=Math.min(bins-1,i0+1),f=bx-i0;
   const delta=(sm[i0]*(1-f)+sm[i1]*f)/syScale,sy=Math.max(0,Math.min(srcH-1,Math.round(y+delta)));
-  const si=(sy*srcW+x)*4,di=(y*srcW+x)*4;
-  ddata[di]=sdata[si];ddata[di+1]=sdata[si+1];ddata[di+2]=sdata[si+2];ddata[di+3]=sdata[si+3];
+  const y0=Math.floor(sy),y1=Math.min(srcH-1,y0+1),fy=sy-y0;
+  const si0=(y0*srcW+x)*4,si1=(y1*srcW+x)*4,di=(y*srcW+x)*4;
+  // Bilinear sampling avoids stair-stepped text edges caused by integer row copying.
+  for(let ch=0;ch<3;ch++)ddata[di+ch]=sdata[si0+ch]*(1-fy)+sdata[si1+ch]*fy;
+  ddata[di+3]=sdata[si0+3]*(1-fy)+sdata[si1+3]*fy;
  }
  oc.putImageData(dst,0,0);
  return {ok:true,data:out.toDataURL('image/jpeg',.97),lines:bandData.length};
