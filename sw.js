@@ -1,7 +1,7 @@
-const CACHE = 'glassscan-v110-cropfix';
+const CACHE = 'glassscan-v150-changelog';
 const ASSETS = [
-  './','./index.html','./styles.css','./app.js','./ai-tools.js',
-  './interaction-fix.js','./manifest.webmanifest','./icon.svg'
+  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
+  './site-updates.js','./manifest.webmanifest','./icon.svg'
 ];
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
