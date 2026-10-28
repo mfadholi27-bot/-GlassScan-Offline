@@ -16,12 +16,27 @@
     loadPromise = new Promise((resolve, reject) => {
       const existing = document.querySelector('script[data-glassscan-quadscan]');
       const script = existing || document.createElement('script');
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error('Pemuatan AI melewati 20 detik. Periksa koneksi lalu tekan tombol lagi.'));
+      }, 20000);
       const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
         if (window.Quadscan && typeof window.Quadscan.scan === 'function') resolve(window.Quadscan);
-        else reject(new Error('Library AI tidak menyediakan API yang diharapkan.'));
+        else reject(new Error('Library AI termuat, tetapi API deteksi tidak tersedia.'));
+      };
+      const fail = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error('Library AI gagal dimuat. Periksa koneksi internet lalu coba lagi.'));
       };
       script.addEventListener('load', finish, {once:true});
-      script.addEventListener('error', () => reject(new Error('Library AI gagal dimuat. Sambungkan internet sekali untuk mengunduh model.')), {once:true});
+      script.addEventListener('error', fail, {once:true});
       if (!existing) {
         script.src = 'https://cdn.jsdelivr.net/npm/quadscan@1.0.0/dist/quadscan.iife.js';
         script.async = true;
@@ -44,6 +59,7 @@
     const button = document.getElementById('cropAuto');
     if (!button || button.dataset.gsAiBound) return;
     button.dataset.gsAiBound = '1';
+    button.disabled = false;
     button.textContent = '✦ Deteksi sudut AI';
     button.title = 'Gunakan model AI lokal setelah model berhasil dimuat; jika gagal, gunakan deteksi klasik.';
     button.onclick = async () => {
@@ -57,7 +73,8 @@
       setButtonBusy(true, 'Menyiapkan model AI…');
       try {
         const api = await loadQuadscan();
-        const result = await api.scan(cropImage, {
+        const result = await Promise.race([
+          api.scan(cropImage, {
           mode: 'detect',
           minDetectionConfidence: 0.12,
           onProgress: event => {
@@ -67,7 +84,9 @@
             } else if (event.phase === 'model-compile') setButtonBusy(true, 'Menyiapkan model…');
             else setButtonBusy(true, 'AI mendeteksi sudut…');
           }
-        });
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Proses deteksi AI terlalu lama. Coba lagi atau gunakan empat titik manual.')), 30000))
+        ]);
         const points = result && result.success ? pointList(result.corners) : null;
         if (!points || !validQuad(points, cropImage)) {
           if (typeof toast === 'function') toast('AI belum yakin menemukan empat sudut. Mencoba deteksi klasik…');
