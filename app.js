@@ -168,41 +168,90 @@ function detectQuad(source){
   return cvQuad || detectQuadHeuristic(source);
 }
 
-function drawLive(){const v=$('video'),c=$('edgeCanvas'),g=c.getContext('2d');if(!stream)return;if(v.videoWidth&&v.videoHeight){const rect=v.getBoundingClientRect();const vw=rect.width, vh=rect.height;c.width=Math.round(vw*devicePixelRatio);c.height=Math.round(vh*devicePixelRatio);g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);g.clearRect(0,0,vw,vh);let q=detectQuad(v);if(q){const scale=Math.min(vw/v.videoWidth,vh/v.videoHeight),dw=v.videoWidth*scale,dh=v.videoHeight*scale,ox=(vw-dw)/2,oy=(vh-dh)/2;g.beginPath();q.forEach((p,i)=>{const x=ox+p[0]*scale,y=oy+p[1]*scale;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fillStyle='rgba(65,240,190,.10)';g.fill();g.strokeStyle='#5ef3c2';g.lineWidth=2.5;g.setLineDash([]);g.stroke();q.forEach(p=>{g.beginPath();g.arc(ox+p[0]*scale,oy+p[1]*scale,5,0,Math.PI*2);g.fillStyle='#ffffff';g.fill();g.strokeStyle='#20cda1';g.stroke()});$('detectStatus').textContent='4 SUDUT TERDETEKSI';$('detectStatus').style.color='#7fffc6';document.querySelector('.hud-dot').style.background='#53efb8';stable++}else{$('detectStatus').textContent='CARI TEPI DOKUMEN';$('detectStatus').style.color='#ffe08a';document.querySelector('.hud-dot').style.background='#ffc95c';stable=0}if(auto&&q&&stable>12&&Date.now()-lastAuto>4000){lastAuto=Date.now();capture()}}raf=requestAnimationFrame(drawLive)}
+let lastLiveDetect=0,lastLiveQuad=null,lastLiveDetectAt=0;
+function drawLive(){
+ const v=$('video'),c=$('edgeCanvas'),g=c.getContext('2d');
+ if(!stream)return;
+ if(v.videoWidth&&v.videoHeight){
+  const rect=v.getBoundingClientRect(),vw=rect.width,vh=rect.height,dpr=devicePixelRatio||1;
+  if(c.width!==Math.round(vw*dpr)||c.height!==Math.round(vh*dpr)){c.width=Math.round(vw*dpr);c.height=Math.round(vh*dpr)}
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,vw,vh);
+  // Vision detection is intentionally throttled: running OpenCV on every video frame
+  // overheats phones and causes the overlay to jump.
+  const now=performance.now();
+  if(now-lastLiveDetectAt>220){
+   lastLiveDetectAt=now;
+   try{lastLiveQuad=detectQuad(v)}catch(e){lastLiveQuad=null;console.warn('Live detection:',e)}
+  }
+  const q=lastLiveQuad;
+  if(q){
+   // object-fit:cover fills the preview by cropping the excess dimension.
+   const scale=Math.max(vw/v.videoWidth,vh/v.videoHeight),dw=v.videoWidth*scale,dh=v.videoHeight*scale,ox=(vw-dw)/2,oy=(vh-dh)/2;
+   g.beginPath();q.forEach((p,i)=>{const x=ox+p[0]*scale,y=oy+p[1]*scale;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();
+   g.fillStyle='rgba(65,240,190,.10)';g.fill();g.strokeStyle='#5ef3c2';g.lineWidth=2.5;g.stroke();
+   q.forEach(p=>{g.beginPath();g.arc(ox+p[0]*scale,oy+p[1]*scale,5,0,Math.PI*2);g.fillStyle='#fff';g.fill();g.strokeStyle='#20cda1';g.stroke()});
+   $('detectStatus').textContent='PERIKSA 4 SUDUT';$('detectStatus').style.color='#7fffc6';document.querySelector('.hud-dot').style.background='#53efb8';
+   stable++;
+  }else{$('detectStatus').textContent='ARAHKAN KE TEPI KERTAS';$('detectStatus').style.color='#ffe08a';document.querySelector('.hud-dot').style.background='#ffc95c';stable=0}
+  if(auto&&q&&stable>12&&Date.now()-lastAuto>4000){lastAuto=Date.now();capture()}
+ }
+ raf=requestAnimationFrame(drawLive)
+}
 async function capture(){const v=$('video');if(!stream||!v.videoWidth){toast('Kamera belum siap');return}const c=document.createElement('canvas');const s=Math.min(1,2600/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);c.getContext('2d').drawImage(v,0,0,c.width,c.height);let data=c.toDataURL('image/jpeg',.97);const q=detectQuad(c);if(q){try{data=perspectiveWarp(c,q)}catch(e){console.warn(e)}}pages.push({data,name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`,rotation:0});active=pages.length-1;render();counts();toast(q?'Foto diambil dan perspektif dikoreksi':'Foto diambil. Sudut tidak cukup jelas; gunakan Deteksi sudut & crop.');if(auto){auto=false;$('autoBtn').textContent='Auto: OFF';$('autoBtn').classList.remove('on');stable=0}}
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
 function perspectiveWarp(src,q){const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);const W=Math.max(1,Math.round(Math.max(dist(q[0],q[1]),dist(q[3],q[2])))),H=Math.max(1,Math.round(Math.max(dist(q[0],q[3]),dist(q[1],q[2]))));const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height;const dst=[[0,0],[W-1,0],[W-1,H-1],[0,H-1]],A=[],b=[];for(let i=0;i<4;i++){const [x,y]=dst[i],[u,v]=q[i];A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}const h=solve(A,b),out=document.createElement('canvas');const scale=Math.min(1,2600/Math.max(W,H));out.width=Math.max(1,Math.round(W*scale));out.height=Math.max(1,Math.round(H*scale));const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(src,0,0,sw,sh);const im=oc.getImageData(0,0,out.width,out.height),srcData=im.data;const input=document.createElement('canvas');input.width=sw;input.height=sh;const ix=input.getContext('2d',{willReadFrequently:true});ix.drawImage(src,0,0,sw,sh);const id=ix.getImageData(0,0,sw,sh).data;for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++){const X=x/scale,Y=y/scale,den=h[6]*X+h[7]*Y+1,u=(h[0]*X+h[1]*Y+h[2])/den,v=(h[3]*X+h[4]*Y+h[5])/den,tx=(y*out.width+x)*4;if(u<0||v<0||u>=sw-1||v>=sh-1){srcData[tx]=srcData[tx+1]=srcData[tx+2]=255;srcData[tx+3]=255;continue}const x0=Math.floor(u),y0=Math.floor(v),fx=u-x0,fy=v-y0;for(let ch=0;ch<3;ch++){const a=id[(y0*sw+x0)*4+ch],bb=id[(y0*sw+x0+1)*4+ch],cc=id[((y0+1)*sw+x0)*4+ch],dd=id[((y0+1)*sw+x0+1)*4+ch];srcData[tx+ch]=(a*(1-fx)+bb*fx)*(1-fy)+(cc*(1-fx)+dd*fx)*fy}srcData[tx+3]=255}oc.putImageData(im,0,0);return out.toDataURL('image/jpeg',.97)}
 function syncFilter(){document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter))}async function render(){const has=active>=0&&pages[active];$('emptyState').hidden=!!has;$('previewWrap').hidden=!has;$('previewActions').hidden=!has;$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length;if(!has){$('previewTitle').textContent='Belum ada dokumen';$('thumbs').innerHTML='';return}const img=await loadImage(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();if(filter!=='original')applyFilter(ctx,canvas.width,canvas.height,filter);$('previewTitle').textContent=pages[active].name;drawThumbs()}
 function applyFilter(c,w,h,mode){
- const im=c.getImageData(0,0,w,h),d=im.data,n=w*h;
  if(mode==='original')return;
- if(mode==='gray'){for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2];d[i]=d[i+1]=d[i+2]=y}}
- else if(mode==='bw'){
-  const hist=new Uint32Array(256);let sum=0;for(let i=0;i<d.length;i+=4){const y=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);hist[y]++;sum+=y}
-  let sb=0,wb=0,mx=-1,t=160;for(let i=0;i<256;i++){wb+=hist[i];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=i*hist[i];const v=wb*wf*(sb/wb-(sum-sb)/wf)**2;if(v>mx){mx=v;t=i}}
-  // Slightly soften threshold so small text strokes survive camera noise.
+ const im=c.getImageData(0,0,w,h),d=im.data,n=w*h;
+ if(mode==='gray'){for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2];d[i]=d[i+1]=d[i+2]=y}c.putImageData(im,0,0);return}
+ if(mode==='bw'){
+  const hist=new Uint32Array(256);let sum=0;
+  for(let i=0;i<d.length;i+=4){const y=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);hist[y]++;sum+=y}
+  let sb=0,wb=0,mx=-1,t=160;
+  for(let i=0;i<256;i++){wb+=hist[i];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=i*hist[i];const v=wb*wf*(sb/wb-(sum-sb)/wf)**2;if(v>mx){mx=v;t=i}}
   for(let i=0;i<d.length;i+=4){const y=.299*d[i]+.587*d[i+1]+.114*d[i+2],v=y>t?255:0;d[i]=d[i+1]=d[i+2]=v}
- }else if(mode==='enhance'||mode==='magic'||mode==='shadow'){
-  // Estimate broad illumination field at low resolution, then lift shadows while retaining color.
-  const sw=Math.max(8,Math.ceil(w/36)),sh=Math.max(8,Math.ceil(h/36)),small=document.createElement('canvas');small.width=sw;small.height=sh;
-  const sc=small.getContext('2d',{willReadFrequently:true});sc.drawImage(c,0,0,sw,sh);const sd=sc.getImageData(0,0,sw,sh).data;
-  const field=new Float32Array(sw*sh);for(let i=0,p=0;i<sd.length;i+=4,p++)field[p]=.299*sd[i]+.587*sd[i+1]+.114*sd[i+2];
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-   const i=(y*w+x)*4,sx=Math.min(sw-1,Math.floor(x/w*sw)),sy=Math.min(sh-1,Math.floor(y/h*sh)),bg=Math.max(45,field[sy*sw+sx]);
-   let r=d[i],g=d[i+1],b=d[i+2],lum=.299*r+.587*g+.114*b;
-   if(mode==='shadow'){const target=Math.min(1.32,205/bg);const gain=Math.max(.88,Math.min(1.28,target));r*=gain;g*=gain;b*=gain;}
-   if(mode==='enhance'){const gain=1.20,offset=10;r=(r-128)*gain+128+offset;g=(g-128)*gain+128+offset;b=(b-128)*gain+128+offset;}
-   if(mode==='magic'){
-    const corrected=Math.min(245,Math.max(0,(lum/bg)*218+12));const gain=lum>1?corrected/lum:1;
-    // Neutralize a little yellow/green cast without erasing colored logos.
-    r=(r*gain)*1.035;g=(g*gain)*1.005;b=(b*gain)*.985;
-    const l=.299*r+.587*g+.114*b;r=l+(r-l)*1.10;g=l+(g-l)*1.10;b=l+(b-l)*1.10;
+  c.putImageData(im,0,0);return;
+ }
+ if(!['enhance','magic','shadow'].includes(mode))return;
+ // Low-resolution illumination map + bilinear sampling avoids the blocky bands from
+ // nearest-neighbour background correction. Work from the original pixels only.
+ const sw=Math.max(12,Math.ceil(w/48)),sh=Math.max(12,Math.ceil(h/48)),small=document.createElement('canvas');
+ small.width=sw;small.height=sh;const sc=small.getContext('2d',{willReadFrequently:true});
+ sc.drawImage(c,0,0,sw,sh);const sd=sc.getImageData(0,0,sw,sh).data,field=new Float32Array(sw*sh);
+ for(let i=0,p=0;i<sd.length;i+=4,p++)field[p]=.299*sd[i]+.587*sd[i+1]+.114*sd[i+2];
+ const clamp=v=>Math.max(0,Math.min(255,v));
+ for(let y=0;y<h;y++){
+  const fy=(y/(h-1||1))*(sh-1),y0=Math.floor(fy),y1=Math.min(sh-1,y0+1),ty=fy-y0;
+  for(let x=0;x<w;x++){
+   const fx=(x/(w-1||1))*(sw-1),x0=Math.floor(fx),x1=Math.min(sw-1,x0+1),tx=fx-x0;
+   const bg=Math.max(35,(field[y0*sw+x0]*(1-tx)+field[y0*sw+x1]*tx)*(1-ty)+(field[y1*sw+x0]*(1-tx)+field[y1*sw+x1]*tx)*ty);
+   const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2],lum=.299*r+.587*g+.114*b;
+   if(mode==='shadow'){
+    // Divide by the estimated illumination field gently; preserve dark ink instead
+    // of multiplying every pixel by a large global gain.
+    const target=Math.max(.78,Math.min(1.65,190/bg)),gain=Math.pow(target,.72);
+    d[i]=clamp(190+(r-bg)*gain);d[i+1]=clamp(190+(g-bg)*gain);d[i+2]=clamp(190+(b-bg)*gain);
+   }else if(mode==='enhance'){
+    const gain=1.28,offset=8;d[i]=clamp((r-128)*gain+128+offset);d[i+1]=clamp((g-128)*gain+128+offset);d[i+2]=clamp((b-128)*gain+128+offset);
+   }else{
+    const corrected=clamp((lum/ bg)*218+14),gain=lum>1?corrected/lum:1;
+    const rr=r*gain,gg=g*gain,bb=b*gain,ll=.299*rr+.587*gg+.114*bb;
+    d[i]=clamp(ll+(rr-ll)*1.12);d[i+1]=clamp(ll+(gg-ll)*1.12);d[i+2]=clamp(ll+(bb-ll)*1.12);
    }
-   d[i]=Math.max(0,Math.min(255,r));d[i+1]=Math.max(0,Math.min(255,g));d[i+2]=Math.max(0,Math.min(255,b));
   }
  }
- c.putImageData(im,0,0)
+ // Mild unsharp mask for text clarity, only on the enhanced/magic result. Blend against
+ // a small blurred copy so fine text gains edge definition without hard thresholding.
+ if(mode==='enhance'||mode==='magic'){
+  const blur=document.createElement('canvas');blur.width=w;blur.height=h;
+  const bc=blur.getContext('2d',{willReadFrequently:true});
+  bc.filter='blur(0.8px)';bc.drawImage(c,0,0,w,h);bc.filter='none';
+  const bd=bc.getImageData(0,0,w,h).data;
+  for(let i=0;i<d.length;i+=4)for(let ch=0;ch<3;ch++)d[i+ch]=clamp(d[i+ch]+(d[i+ch]-bd[i+ch])*.22);
+ }
+ c.putImageData(im,0,0);
 }
 function drawThumbs(){const box=$('thumbs');box.innerHTML='';pages.forEach((p,i)=>{const b=document.createElement('button');b.className='thumb'+(i===active?' active':'');const tc=document.createElement('canvas'),badge=document.createElement('span');badge.textContent=i+1;b.append(tc,badge);loadImage(p.data).then(img=>{tc.width=img.naturalWidth;tc.height=img.naturalHeight;tc.getContext('2d').drawImage(img,0,0)});b.onclick=()=>{active=i;render()};box.append(b)})}function counts(){$('pageCount').textContent=`${pages.length} halaman`;$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length}
 async function processedData(i,quality=.94){const p=pages[i],img=await loadImage(p.data),rot=p.rotation||0,sw=img.naturalWidth,sh=img.naturalHeight,c=document.createElement('canvas');c.width=rot%180?sh:sw;c.height=rot%180?sw:sh;const x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(rot*Math.PI/180);x.drawImage(img,-sw/2,-sh/2);if(i===active&&filter!=='original')applyFilter(x,c.width,c.height,filter);return c.toDataURL('image/jpeg',quality)}async function exportJpg(i){try{const url=await processedData(i,.96),a=document.createElement('a');a.href=url;a.download=(pages[i].name||`GlassScan-${i+1}`).replace(/\.[^.]+$/,'')+'.jpg';document.body.append(a);a.click();a.remove()}catch(e){toast('Gagal membuat JPG')}}
