@@ -1,13 +1,17 @@
 {
   "name": "glassscan-desktop-host",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Experimental Windows desktop host for GlassScan and future local ChatGPT integration",
+  "description": "Experimental Windows desktop host for GlassScan with optional local ChatGPT plan integration",
   "main": "main.cjs",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "setup:siwc": "powershell -NoProfile -ExecutionPolicy Bypass -File ./setup-siwc.ps1"
   },
   "devDependencies": {
-    "electron": "^38.0.0"
+    "electron": "42.11.4"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
