@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.0 · GS-180',
-  updatedAt: '28 Oktober 2026, 20:20 WIB',
+  version: 'V1.8.1 · GS-181',
+  updatedAt: '28 Oktober 2026, 20:25 WIB',
   changes: [
+   'Setelah tombol foto ditekan, gambar langsung dipotong mengikuti area bingkai tetap (memperhitungkan object-fit: cover) dan Magic Color dipilih otomatis.',
+   'Koreksi perspektif empat sudut tetap tersedia di editor crop untuk meluruskan dokumen yang miring.',
    'Live Scanner memakai bingkai panduan tetap; tidak lagi menggambar sudut tebakan di atas video.',
    'Foto kamera disimpan tanpa koreksi perspektif otomatis yang berisiko salah; pengguna dapat memeriksa dan mengatur sudut di editor crop.',
    'Deteksi live dibatasi agar kamera ponsel lebih ringan dan garis panduan lebih stabil.',
@@ -15,7 +17,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Bingkai tetap hanya panduan komposisi, bukan deteksi tepi otomatis. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'Pemotongan awal mengikuti bingkai tetap, bukan deteksi tepi dokumen; untuk koreksi perspektif, periksa dan atur empat sudut di editor crop. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;
