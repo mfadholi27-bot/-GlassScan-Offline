@@ -10,7 +10,9 @@ const effectStrengths={magic:100,magicpro:100,color:100,bw:100,adaptive:100,gray
 function ensureEffectPanel(){if($('effectControlPanel'))return;const panel=document.createElement('section');panel.id='effectControlPanel';panel.className='effect-control glass';panel.innerHTML='<div class="effect-control-head"><div><small>EFEK AKTIF</small><strong id="effectName">Magic Color</strong></div><output id="effectValue">100%</output></div><div class="effect-slider-row"><button type="button" id="effectMinus" aria-label="Kurangi intensitas">−</button><input id="effectStrength" type="range" min="0" max="200" step="1" value="100" aria-label="Intensitas efek sampai 200 persen"><button type="button" id="effectPlus" aria-label="Tambah intensitas">+</button></div><div class="effect-scale"><span>Lembut</span><span>Kuat · 200%</span></div><p>Atur kekuatan tiap efek. Indikator di bawah menunjukkan seberapa besar piksel berubah dari foto asli. Geser ke 150–200% untuk menguji perbedaan.</p><div id="effectDifference" class="effect-difference" role="status" aria-live="polite">Pilih efek untuk mengukur perubahan.</div>';document.querySelector('.filters').insertAdjacentElement('afterend',panel);$('effectStrength').addEventListener('input',e=>{effectStrengths[filter]=Number(e.target.value);syncEffectPanel();render()});$('effectMinus').onclick=()=>setEffectStrength(-10);$('effectPlus').onclick=()=>setEffectStrength(10);syncEffectPanel()}
 function setEffectStrength(delta){if(filter==='original')return;effectStrengths[filter]=Math.max(0,Math.min(200,(effectStrengths[filter]??100)+delta));syncEffectPanel();render()}
 function syncEffectPanel(){const panel=$('effectControlPanel');if(!panel)return;const names={original:'Asli (tanpa efek)',magic:'Magic Color',magicpro:'Magic Color Pro',color:'Color natural',bw:'Hitam putih',adaptive:'Adaptive B&W',gray:'Grayscale',enhance:'Teks tajam',shadow:'Kurangi bayangan',scanpro:'Book Premium',bookpremium:'Book Premium'};const value=filter==='original'?0:(effectStrengths[filter]??100);$('effectName').textContent=names[filter]||filter;$('effectValue').textContent=value+'%';$('effectStrength').value=value;$('effectStrength').disabled=filter==='original';$('effectMinus').disabled=filter==='original'||value===0;$('effectPlus').disabled=filter==='original'||value>=200}
-$('correctBtn').onclick=openCropEditor;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').disabled=false;$('cropAuto').onclick=()=>{const b=$('cropAuto');b.disabled=false;if(!cropImage){toast('Buka editor crop terlebih dahulu.');return}try{const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Deteksi klasik menemukan perkiraan sudut. Periksa titik.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')}catch(e){console.warn('[GlassScan] Classic corner detection failed',e);toast('Deteksi otomatis gagal. Geser empat titik secara manual.')}finally{b.disabled=false}};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
+$('correctBtn').onclick=openCropEditor;
+$('dewarpBtn').onclick=async()=>{if(active<0)return;const b=$('dewarpBtn');b.disabled=true;const old=b.textContent;b.textContent='Menganalisis lengkungan…';try{const result=await dewarpPageByTextLines(await loadImage(pages[active].data));if(!result.ok){toast(result.message);return}if(!pages[active].dewarpOriginalData)pages[active].dewarpOriginalData=pages[active].data;pages[active].data=result.data;pages[active].rotation=0;render();toast('Ratakan kertas selesai · '+result.lines+' baris teks dianalisis. Periksa sebelum ekspor.')}catch(e){console.error('[GlassScan Dewarp]',e);toast('Ratakan kertas gagal. Foto asli tetap dipertahankan.')}finally{b.disabled=false;b.textContent=old}};
+$('restoreDewarpBtn').onclick=()=>{if(active<0||!pages[active].dewarpOriginalData)return;pages[active].data=pages[active].dewarpOriginalData;delete pages[active].dewarpOriginalData;render();toast('Foto sebelum perataan dipulihkan')};$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').disabled=false;$('cropAuto').onclick=()=>{const b=$('cropAuto');b.disabled=false;if(!cropImage){toast('Buka editor crop terlebih dahulu.');return}try{const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Deteksi klasik menemukan perkiraan sudut. Periksa titik.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')}catch(e){console.warn('[GlassScan] Classic corner detection failed',e);toast('Deteksi otomatis gagal. Geser empat titik secara manual.')}finally{b.disabled=false}};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
 $('deleteBtn').onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast('Halaman dihapus')};$('rotateBtn').onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast('Halaman diputar')};$('saveJpgBtn').onclick=()=>active>=0&&exportJpg(active);$('savePngBtn').onclick=()=>active>=0&&exportPng(active);$('exportAllJpg').onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*400));toast('Menyiapkan file JPG satu per satu')};$('exportPdf').onclick=exportPdf;
 const readFile=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith('image/'));for(const f of fs){try{const im=await loadImage(await readFile(f)),c=document.createElement('canvas'),s=Math.min(1,3200/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);pages.push({data:c.toDataURL('image/jpeg',.96),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast('Gagal membaca gambar')}}if(fs.length){active=pages.length-1;filter='original';compareOriginal=false;syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan. Tekan Deteksi sudut & crop.`)}$('cameraInput').value='';$('importInput').value=''}
@@ -52,6 +54,63 @@ $('cropCanvas').addEventListener('pointerdown',e=>{if(!cropLayout)return;const [
 $('cropCanvas').addEventListener('pointermove',e=>{if(dragCorner<0||!cropLayout)return;const [x,y]=cropPointer(e),L=cropLayout;loupePointer=[x,y];cropQuad[dragCorner]=[Math.max(0,Math.min(cropImage.naturalWidth,(x-L.ox)/L.scale)),Math.max(0,Math.min(cropImage.naturalHeight,(y-L.oy)/L.scale))];drawCropEditor();e.preventDefault()});
 $('cropCanvas').addEventListener('pointerup',()=>{dragCorner=-1;loupePointer=null;drawCropEditor()});$('cropCanvas').addEventListener('pointercancel',()=>{dragCorner=-1;loupePointer=null;drawCropEditor()});
 async function applyCropEditor(){if(!cropImage||!validQuad(cropQuad,cropImage)){toast('Periksa kembali posisi empat sudut');return}try{const area=Math.abs(cropQuad.reduce((s,p,i)=>s+p[0]*cropQuad[(i+1)%4][1]-p[1]*cropQuad[(i+1)%4][0],0)/2);if(area<cropImage.naturalWidth*cropImage.naturalHeight*.02){toast('Sudut terlalu berdekatan. Atur ulang.');return}const warped=perspectiveWarp(cropImage,cropQuad);pages[active].data=warped;pages[active].rotation=0;$('cropDialog').close();render();toast('Crop dan koreksi perspektif diterapkan') }catch(e){console.error(e);toast('Crop gagal. Coba atur ulang sudut')}}
+
+
+// GS-198: local, classical text-line dewarping. Independent approximation,
+// not CamScanner's proprietary implementation or a trained neural model.
+async function dewarpPageByTextLines(image){
+ const maxW=720,scale=Math.min(1,maxW/image.naturalWidth),sw=Math.max(160,Math.round(image.naturalWidth*scale)),sh=Math.max(160,Math.round(image.naturalHeight*scale));
+ const probe=document.createElement('canvas');probe.width=sw;probe.height=sh;
+ const pg=probe.getContext('2d',{willReadFrequently:true});pg.drawImage(image,0,0,sw,sh);
+ const pixels=pg.getImageData(0,0,sw,sh).data,gray=new Uint8Array(sw*sh),rowInk=new Float32Array(sh);
+ for(let y=0,p=0;y<sh;y++)for(let x=0;x<sw;x++,p++){
+  const i=p*4,v=.299*pixels[i]+.587*pixels[i+1]+.114*pixels[i+2];gray[p]=v;
+  if(v<170)rowInk[y]++;
+ }
+ function smooth1(a,r){const out=new Float32Array(a.length);for(let i=0;i<a.length;i++){let s=0,n=0;for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++){s+=a[j];n++}out[i]=s/n}return out}
+ const proj=smooth1(rowInk,2),peak=Math.max(...proj),threshold=Math.max(2,sw*.004);
+ if(peak<threshold*1.7)return {ok:false,message:'Belum ditemukan baris teks yang cukup jelas. Coba foto dokumen yang lebih tajam.'};
+ const bands=[];let start=-1,last=-1;
+ for(let y=0;y<sh;y++){if(proj[y]>=threshold){if(start<0)start=y;last=y}else if(start>=0&&y-last>3){if(last-start>=1)bands.push([start,last]);start=-1}}
+ if(start>=0&&last-start>=1)bands.push([start,last]);
+ const usable=bands.filter(([a,b])=>b-a<Math.max(24,sh*.045)&&a>sh*.015&&b<sh*.985);
+ if(usable.length<3)return {ok:false,message:'Teks terlalu sedikit untuk memperkirakan lengkungan dengan aman.'};
+ const bins=36,step=sw/bins,bandData=[];
+ for(const [y0,y1] of usable){
+  const ys=new Float32Array(bins);ys.fill(NaN);let valid=0;
+  for(let bx=0;bx<bins;bx++){
+   const xa=Math.floor(bx*step),xb=Math.min(sw,Math.ceil((bx+1)*step));let bottom=-1,count=0;
+   for(let y=y0;y<=y1;y++)for(let x=xa;x<xb;x++)if(gray[y*sw+x]<145){bottom=y;count++}
+   if(count>=2&&bottom>=0){ys[bx]=bottom;valid++}
+  }
+  if(valid>=Math.ceil(bins*.42))bandData.push(ys);
+ }
+ if(bandData.length<3)return {ok:false,message:'Baris teks tidak cukup konsisten untuk koreksi lengkungan.'};
+ const offsets=new Float32Array(bins),support=new Uint8Array(bins);
+ for(const ys of bandData){
+  let sx=0,sy=0,sxx=0,sxy=0,n=0;
+  for(let i=0;i<bins;i++)if(Number.isFinite(ys[i])){const x=i/(bins-1);sx+=x;sy+=ys[i];sxx+=x*x;sxy+=x*ys[i];n++}
+  const den=n*sxx-sx*sx;if(Math.abs(den)<1e-6)continue;
+  const a=(n*sxy-sx*sy)/den,b=(sy-a*sx)/n;
+  for(let i=0;i<bins;i++)if(Number.isFinite(ys[i])){offsets[i]+=ys[i]-(a*(i/(bins-1))+b);support[i]++}
+ }
+ for(let i=0;i<bins;i++)offsets[i]=support[i]?offsets[i]/support[i]:0;
+ const sm=smooth1(offsets,3),limit=sh*.025;
+ for(let i=0;i<bins;i++)sm[i]=Math.max(-limit,Math.min(limit,sm[i]));
+ const magnitude=Math.max(...sm)-Math.min(...sm);
+ if(magnitude<sh*.004)return {ok:false,message:'Lengkungan tidak cukup kuat terdeteksi. Foto tidak diubah.'};
+ const srcW=image.naturalWidth,srcH=image.naturalHeight,out=document.createElement('canvas');out.width=srcW;out.height=srcH;
+ const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(image,0,0,srcW,srcH);
+ const src=oc.getImageData(0,0,srcW,srcH),dst=oc.createImageData(srcW,srcH),sdata=src.data,ddata=dst.data,syScale=sh/srcH,sxScale=sw/srcW;
+ for(let y=0;y<srcH;y++)for(let x=0;x<srcW;x++){
+  const bx=Math.min(bins-1,Math.max(0,(x*sxScale/step))),i0=Math.floor(bx),i1=Math.min(bins-1,i0+1),f=bx-i0;
+  const delta=(sm[i0]*(1-f)+sm[i1]*f)/syScale,sy=Math.max(0,Math.min(srcH-1,Math.round(y+delta)));
+  const si=(sy*srcW+x)*4,di=(y*srcW+x)*4;
+  ddata[di]=sdata[si];ddata[di+1]=sdata[si+1];ddata[di+2]=sdata[si+2];ddata[di+3]=sdata[si+3];
+ }
+ oc.putImageData(dst,0,0);
+ return {ok:true,data:out.toDataURL('image/jpeg',.97),lines:bandData.length};
+}
 
 function detectQuadHeuristic(source){
   const w=source.videoWidth||source.naturalWidth||source.width;
@@ -324,7 +383,7 @@ function showQualityPanel(metrics){
  metrics.tips.forEach(t=>{const li=document.createElement('li');li.textContent=t;list.appendChild(li)});panel.appendChild(list);
  const note=document.createElement('div');note.style.cssText='margin-top:6px;color:#91a7c1';note.textContent='Ini pemeriksaan heuristik, bukan jaminan mutu atau pengganti pemeriksaan visual.';panel.appendChild(note);
 }
-async function render(){const has=active>=0&&pages[active];$('emptyState').hidden=!!has;$('previewWrap').hidden=!has;$('previewActions').hidden=!has;$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length;if(!has){$('previewTitle').textContent='Belum ada dokumen';$('thumbs').innerHTML='';const qp=document.getElementById('gsQualityPanel');if(qp)qp.hidden=true;updateEffectDifference(null);return}const img=await loadImage(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();const quality=analyzeDocumentQuality(canvas);showQualityPanel(quality);const originalPixels=ctx.getImageData(0,0,canvas.width,canvas.height);if(filter!=='original'&&!compareOriginal)applyFilter(ctx,canvas.width,canvas.height,filter);const outputPixels=ctx.getImageData(0,0,canvas.width,canvas.height);updateEffectDifference(filter==='original'||compareOriginal?null:measureEffectDifference(originalPixels.data,outputPixels.data));syncCompareButton();$('previewTitle').textContent=pages[active].name;drawThumbs()}
+async function render(){const has=active>=0&&pages[active];$('emptyState').hidden=!!has;$('previewWrap').hidden=!has;$('previewActions').hidden=!has;$('restoreDewarpBtn').hidden=!(has&&!!pages[active].dewarpOriginalData);$('exportPdf').disabled=!pages.length;$('exportAllJpg').disabled=!pages.length;if(!has){$('previewTitle').textContent='Belum ada dokumen';$('thumbs').innerHTML='';const qp=document.getElementById('gsQualityPanel');if(qp)qp.hidden=true;updateEffectDifference(null);return}const img=await loadImage(pages[active].data),rot=pages[active].rotation||0,sw=img.naturalWidth,sh=img.naturalHeight;canvas.width=rot%180?sh:sw;canvas.height=rot%180?sw:sh;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-sw/2,-sh/2);ctx.restore();const quality=analyzeDocumentQuality(canvas);showQualityPanel(quality);const originalPixels=ctx.getImageData(0,0,canvas.width,canvas.height);if(filter!=='original'&&!compareOriginal)applyFilter(ctx,canvas.width,canvas.height,filter);const outputPixels=ctx.getImageData(0,0,canvas.width,canvas.height);updateEffectDifference(filter==='original'||compareOriginal?null:measureEffectDifference(originalPixels.data,outputPixels.data));syncCompareButton();$('previewTitle').textContent=pages[active].name;drawThumbs()}
 function measureEffectDifference(a,b){let sum=0,count=0;const step=Math.max(4,Math.floor(a.length/120000)*4);for(let i=0;i<a.length;i+=step){sum+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);count+=3}return count?sum/(count*255)*100:0}
 function updateEffectDifference(value){const e=$('effectDifference');if(!e)return;if(value===null||!Number.isFinite(value)){e.textContent='Pilih efek lalu bandingkan dengan tombol Lihat asli.';e.dataset.level='none';return}const pct=value.toFixed(1);e.textContent='Perubahan piksel rata-rata: '+pct+'% · '+(value<1?'sangat tipis':value<4?'halus':value<10?'jelas':'kuat');e.dataset.level=value<1?'low':value<4?'medium':'high'}
 function applyFilterCore(c,w,h,mode){
