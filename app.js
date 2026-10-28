@@ -192,15 +192,26 @@ function drawLive(){
  raf=requestAnimationFrame(drawLive)
 }
 function capture(){
- const v=$('video');
- if(!stream||!v.videoWidth){toast('Kamera belum siap');return}
- const c=document.createElement('canvas'),s=Math.min(1,2600/Math.max(v.videoWidth,v.videoHeight));
- c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);
- c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+ const v=$('video'),stage=$('video').closest('.camera-stage'),frame=$('fixedScanFrame');
+ if(!stream||!v.videoWidth||!stage||!frame){toast('Kamera belum siap');return}
+ // Map the visible fixed guide rectangle back into source-video coordinates.
+ // The video uses object-fit:cover, so account for the cropped sides/top.
+ const sr=stage.getBoundingClientRect(),fr=frame.getBoundingClientRect();
+ const scale=Math.max(sr.width/v.videoWidth,sr.height/v.videoHeight);
+ const renderedW=v.videoWidth*scale,renderedH=v.videoHeight*scale;
+ const offX=(renderedW-sr.width)/2,offY=(renderedH-sr.height)/2;
+ const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+ let sx=(fr.left-sr.left+offX)/scale,sy=(fr.top-sr.top+offY)/scale;
+ let ex=(fr.right-sr.left+offX)/scale,ey=(fr.bottom-sr.top+offY)/scale;
+ sx=clamp(sx,0,v.videoWidth-1);sy=clamp(sy,0,v.videoHeight-1);
+ ex=clamp(ex,sx+1,v.videoWidth);ey=clamp(ey,sy+1,v.videoHeight);
+ const sw=ex-sx,sh=ey-sy,down=Math.min(1,2600/Math.max(sw,sh));
+ const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*down));c.height=Math.max(1,Math.round(sh*down));
+ c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
  const data=c.toDataURL('image/jpeg',.97);
  pages.push({data,name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`,rotation:0});
- active=pages.length-1;render();counts();
- toast('Foto diambil. Periksa empat sudut melalui Deteksi sudut & crop sebelum menerapkan koreksi.')
+ active=pages.length-1;filter='magic';syncFilter();render();counts();
+ toast('Foto langsung dipotong mengikuti bingkai dan Magic Color diterapkan. Untuk meluruskan perspektif, buka Deteksi sudut & crop.')
 }
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
