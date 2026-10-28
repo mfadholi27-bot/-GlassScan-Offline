@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded',function(){
   }finally{b.disabled=false;pendingBlob=null;}
  }
  yes?.addEventListener('click',shareImage);
- no?.addEventListener('click',()=>{if(dlg?.open)dlg.close();pendingBlob=null;s.textContent='Dibatalkan. Gambar tidak dibagikan.';});
+ const cancelShare=()=>{if(dlg?.open)dlg.close();pendingBlob=null;s.textContent='Dibatalkan. Gambar tidak dibagikan.';};
+ no?.addEventListener('click',cancelShare);
+ document.getElementById('gsChatGPTConsentNo2')?.addEventListener('click',cancelShare);
 });
 </script>
 <dialog id="gsChatGPTConsent" class="dialog glass" aria-labelledby="gsChatGPTConsentTitle">
