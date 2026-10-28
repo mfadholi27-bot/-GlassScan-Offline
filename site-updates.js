@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.2 · GS-182',
-  updatedAt: '28 Oktober 2026, 20:35 WIB',
+  version: 'V1.9.8 · GS-198',
+  updatedAt: '29 Oktober 2026, 01:50 WIB',
   changes: [
+   'GS-198: perataan kertas diperbarui dari geser vertikal sederhana menjadi remap mesh 2D dengan interpolasi bilinear.',
+   'GS-198: pratinjau dan hasil ekspor memakai fungsi koreksi yang sama; batas gambar di luar sumber diisi putih untuk menghindari piksel liar.',
+   'GS-198: koreksi masih simetris dan eksperimental; belum mendeteksi baseline teks atau merekonstruksi permukaan 3D. Uji visual tetap diperlukan.',
    'Setelah capture, GlassScan mencoba meluruskan perspektif otomatis pada hasil crop bingkai bila kontur buku cukup meyakinkan; jika tidak, mempertahankan crop bingkai agar tidak memotong salah.',
    'Magic Color tetap aktif otomatis untuk pratinjau dan ekspor setelah foto diambil.',
    'Setelah tombol foto ditekan, gambar langsung dipotong mengikuti area bingkai tetap (memperhitungkan object-fit: cover) dan Magic Color dipilih otomatis.',
@@ -19,7 +22,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'GS-198 mesh dewarp bersifat eksperimental dan tidak otomatis mengikuti garis teks. Periksa hasil dan gunakan Pulihkan asli jika huruf atau tepi halaman berubah bentuk. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;
