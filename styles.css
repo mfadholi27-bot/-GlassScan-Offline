@@ -143,3 +143,6 @@ footer{font-size:11px;line-height:1.6}
 
 /* Magic Color Pro: distinct premium filter chip */
 .filter[data-filter="magicpro"]{border-color:#65e6d85c;background:linear-gradient(135deg,rgba(40,190,164,.10),rgba(120,130,255,.10))}.filter[data-filter="magicpro"].active{border-color:#67f0d2;box-shadow:0 0 0 1px #67f0d225,0 7px 22px #45d8c014}.filter[data-filter="magicpro"] .sample{color:#70f1d3;background:linear-gradient(135deg,#173c4a,#24385d)}
+
+/* GS-196: make effect feedback readable on mobile */
+.effect-difference{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(5,16,30,.68);border:1px solid rgba(140,170,220,.22);font-size:.8rem;color:#b9cbe4;line-height:1.4}.effect-difference[data-level="low"]{color:#ffd18b;border-color:#ffd18b66}.effect-difference[data-level="high"]{color:#75f0cb;border-color:#75f0cb66}.effect-control .effect-scale{display:flex;justify-content:space-between;gap:8px}
