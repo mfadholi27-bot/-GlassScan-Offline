@@ -1,5 +1,5 @@
 /* GlassScan V1.8.9 feedback and adaptive offline scanner cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v197-multistage-detection-cache';
+const CACHE_NAME = 'glassscan-v198-page-dewarp-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-corner.js','./ai-tools.js','./local-ai.js',
