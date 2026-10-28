@@ -1,5 +1,5 @@
-/* GlassScan V1.8.7 premium offline scanner cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v187-premium-offline-cache';
+/* GlassScan V1.8.8 adaptive offline scanner cache. Keep in repository root. */
+const CACHE_NAME = 'glassscan-v188-adaptive-scan-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',

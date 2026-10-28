@@ -6,7 +6,7 @@ $('switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'enviro
 $('autoBtn').onclick=()=>{guideOn=!guideOn;$('fixedScanFrame').hidden=!guideOn;$('autoBtn').textContent=`Bingkai: ${guideOn?'ON':'OFF'}`;$('autoBtn').classList.toggle('on',guideOn);toast(guideOn?'Bingkai panduan ditampilkan':'Bingkai panduan disembunyikan')};
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;compareOriginal=false;syncCompareButton();document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));syncEffectPanel();render()});
 $('compareBtn').onclick=()=>{compareOriginal=!compareOriginal;syncCompareButton();render()};function syncCompareButton(){const b=$('compareBtn');if(b)b.textContent=compareOriginal?'Lihat hasil olahan':'Bandingkan: lihat asli'}
-const effectStrengths={magic:100,color:100,bw:100,gray:100,enhance:100,shadow:100,scanpro:100,bookpremium:100};
+const effectStrengths={magic:100,color:100,bw:100,adaptive:100,gray:100,enhance:100,shadow:100,scanpro:100,bookpremium:100};
 function ensureEffectPanel(){if($('effectControlPanel'))return;const panel=document.createElement('section');panel.id='effectControlPanel';panel.className='effect-control glass';panel.innerHTML='<div class="effect-control-head"><div><small>EFEK AKTIF</small><strong id="effectName">Magic Color</strong></div><output id="effectValue">100%</output></div><div class="effect-slider-row"><button type="button" id="effectMinus" aria-label="Kurangi intensitas">−</button><input id="effectStrength" type="range" min="0" max="200" step="1" value="100" aria-label="Intensitas efek sampai 200 persen"><button type="button" id="effectPlus" aria-label="Tambah intensitas">+</button></div><div class="effect-scale"><span>Lembut</span><span>Kuat · 200%</span></div><p>Atur kekuatan setiap efek secara terpisah. 100% = normal, 200% = efek lebih kuat. Nilai tersimpan selama halaman ini terbuka.</p>';document.querySelector('.filters').insertAdjacentElement('afterend',panel);$('effectStrength').addEventListener('input',e=>{effectStrengths[filter]=Number(e.target.value);syncEffectPanel();render()});$('effectMinus').onclick=()=>setEffectStrength(-10);$('effectPlus').onclick=()=>setEffectStrength(10);syncEffectPanel()}
 function setEffectStrength(delta){if(filter==='original')return;effectStrengths[filter]=Math.max(0,Math.min(200,(effectStrengths[filter]??100)+delta));syncEffectPanel();render()}
 function syncEffectPanel(){const panel=$('effectControlPanel');if(!panel)return;const names={original:'Asli (tanpa efek)',magic:'Magic Color',color:'Color natural',bw:'Hitam putih',gray:'Grayscale',enhance:'Teks tajam',shadow:'Kurangi bayangan',scanpro:'Book Premium',bookpremium:'Book Premium'};const value=filter==='original'?0:(effectStrengths[filter]??100);$('effectName').textContent=names[filter]||filter;$('effectValue').textContent=value+'%';$('effectStrength').value=value;$('effectStrength').disabled=filter==='original';$('effectMinus').disabled=filter==='original'||value===0;$('effectPlus').disabled=filter==='original'||value===100}
@@ -275,6 +275,18 @@ async function render(){const has=active>=0&&pages[active];$('emptyState').hidde
 function applyFilterCore(c,w,h,mode){
  if(mode==='original')return;
  const im=c.getImageData(0,0,w,h),d=im.data,n=w*h,clamp=v=>Math.max(0,Math.min(255,v));
+ if(mode==='adaptive'){
+  // Local adaptive threshold based on reduced-resolution illumination estimate; classical processing, not trained AI.
+  const sw=Math.max(16,Math.min(180,Math.ceil(w/24))),sh=Math.max(16,Math.min(180,Math.ceil(h/24)));
+  const small=document.createElement('canvas');small.width=sw;small.height=sh;
+  const sc=small.getContext('2d',{willReadFrequently:true});sc.drawImage(c,0,0,sw,sh);
+  const sd=sc.getImageData(0,0,sw,sh).data,field=new Float32Array(sw*sh);
+  for(let i=0,p=0;i<sd.length;i+=4,p++)field[p]=.299*sd[i]+.587*sd[i+1]+.114*sd[i+2];
+  const lightAt=(x,y)=>{const fx=x/(w-1||1)*(sw-1),fy=y/(h-1||1)*(sh-1),x0=Math.floor(fx),y0=Math.floor(fy),x1=Math.min(sw-1,x0+1),y1=Math.min(sh-1,y0+1),tx=fx-x0,ty=fy-y0;return (field[y0*sw+x0]*(1-tx)+field[y0*sw+x1]*tx)*(1-ty)+(field[y1*sw+x0]*(1-tx)+field[y1*sw+x1]*tx)*ty};
+  const offset=18;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4,lum=.299*d[i]+.587*d[i+1]+.114*d[i+2],bg=lightAt(x,y),v=lum>(bg-offset)?255:0;d[i]=d[i+1]=d[i+2]=v}
+  c.putImageData(im,0,0);return;
+ }
  if(mode==='gray'||mode==='bw'){
   const hist=new Uint32Array(256);let sum=0;
   for(let i=0;i<d.length;i+=4){const y=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);hist[y]++;sum+=y}
