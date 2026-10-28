@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan AI Lab v1.6">
+<meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan AI Professional">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="styles.css">
 <title>GlassScan AI Lab v1.6</title>
 </head>
@@ -10,7 +10,7 @@
 <div class="ambient a"></div><div class="ambient b"></div>
 <main class="shell">
 <header class="topbar"><div class="logo"><span>GS</span></div><div class="brand"><small>PRIVATE DOCUMENT STUDIO</small><h1>GlassScan <em>AI Lab</em></h1></div><button class="round" id="helpBtn" aria-label="Petunjuk">?</button></header>
-<div class="build-ribbon"><span>PRECISION SCAN</span><strong>V1.6 - CHANGELOG</strong><span>LOCAL PROCESSING</span></div>
+<div class="build-ribbon"><span>PRECISION SCAN</span><strong>AI PROFESSIONAL · PREVIEW</strong><span>LOCAL PROCESSING</span></div>
 <div class="opencv-status" id="opencvStatus"><span class="status-dot"></span><span>OpenCV.js: memuat mesin visi komputer...</span></div>
 <section class="hero glass"><div class="hero-copy"><span class="status"><i></i> ON-DEVICE WORKSPACE</span><h2>Every page.<br><b>Perfectly clear.</b></h2><p>Scan dokumen dengan alur kerja yang bersih, privat, dan praktis.</p><div class="hero-pills"><span>• Local processing</span><span>PDF PDF + JPG</span></div></div><div class="hero-visual" aria-hidden="true"><div class="orb"></div><div class="sheet"><div class="sheet-head"></div><i></i><i></i><i class="w"></i><i></i><div class="signature"></div><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div><b>*</b></div></section>
 <section class="section-title"><div><small>WORKSPACE</small><h2>Scan studio</h2></div><span class="count" id="pageCount">0 halaman</span></section>
@@ -21,16 +21,19 @@
 <section class="filters"><button class="filter active" data-filter="original"><span class="sample orig">Aa</span>Asli</button><button class="filter" data-filter="magic"><span class="sample enhance">*</span>Magic Color</button><button class="filter" data-filter="bw"><span class="sample bw">Aa</span>Hitam putih</button><button class="filter" data-filter="gray"><span class="sample gray">Aa</span>Grayscale</button><button class="filter" data-filter="enhance"><span class="sample enhance">Aa</span>Teks tajam</button><button class="filter" data-filter="shadow"><span class="sample enhance">Sun</span>Kurangi bayangan</button></section>
 <section class="preview glass"><div class="preview-head"><div><small>DOCUMENT PREVIEW</small><h3 id="previewTitle">Belum ada dokumen</h3></div><span class="local-badge"><i></i> LOCAL</span></div><div id="emptyState" class="empty"><div class="empty-icon"><span></span></div><b>Siap memindai</b><p>Gunakan kamera atau impor gambar untuk memulai.</p></div><div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div><div class="preview-actions" id="previewActions" hidden><button id="correctBtn" class="secondary">* Deteksi sudut &amp; crop</button><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90 deg</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
 <section class="glass" id="gsChatGPTQuickPanel" style="padding:16px;margin:14px 0;border:1px solid #63e6ff55;background:#101d30;border-radius:20px">
-<div style="font-size:15px;font-weight:800;margin-bottom:6px">✦ Perbaiki gambar scan dengan ChatGPT</div>
-<p style="font-size:12px;line-height:1.5;color:#a9bfd5;margin:0 0 12px">Kirim gambar hasil scan langsung ke ChatGPT untuk membantu meluruskan, meningkatkan keterbacaan, dan membersihkan tampilan. Tidak perlu menjalankan OCR.</p>
-<button id="gsChatGPTQuick" type="button" style="width:100%;border:0;border-radius:12px;padding:14px;background:linear-gradient(110deg,#63e6ff,#9d9aff);color:#07111f;font-weight:800">✦ Bantu perbaiki gambar dengan ChatGPT</button>
-<div id="gsChatGPTQuickStatus" role="status" aria-live="polite" style="font-size:11px;line-height:1.5;color:#9fb4c9;margin-top:9px">Jalankan OCR Indonesia terlebih dahulu.</div>
+<div style="font-size:15px;font-weight:800;margin-bottom:6px">✦ ChatGPT Document Workspace</div>
+<p style="font-size:12px;line-height:1.5;color:#a9bfd5;margin:0 0 12px">Siapkan gambar scan lalu bagikan ke ChatGPT untuk membaca teks, merapikan OCR, merangkum, atau membantu meningkatkan keterbacaan. Pengiriman dilakukan hanya setelah persetujuanmu.</p>
+<button id="gsChatGPTQuick" type="button" style="width:100%;border:0;border-radius:12px;padding:14px;background:linear-gradient(110deg,#63e6ff,#9d9aff);color:#07111f;font-weight:800">✦ Kirim gambar ke ChatGPT</button>
+<button id="gsOpenChatGPT" type="button" style="width:100%;margin-top:8px;border:1px solid #63e6ff55;border-radius:12px;padding:12px;background:#14243a;color:#e9f6ff;font-weight:700">Masuk / buka ChatGPT ↗</button>
+<div id="gsChatGPTQuickStatus" role="status" aria-live="polite" style="font-size:11px;line-height:1.5;color:#9fb4c9;margin-top:9px">Siapkan gambar, lalu pilih tombol untuk membagikannya ke ChatGPT.</div>
 </section>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
  const b=document.getElementById('gsChatGPTQuick'),s=document.getElementById('gsChatGPTQuickStatus');
  const dlg=document.getElementById('gsChatGPTConsent'),yes=document.getElementById('gsChatGPTConsentYes'),no=document.getElementById('gsChatGPTConsentNo');
  if(!b||b.dataset.bound)return;b.dataset.bound='1';
+ const loginBtn=document.getElementById('gsOpenChatGPT');
+ loginBtn?.addEventListener('click',()=>{window.open('https://chatgpt.com/','_blank','noopener,noreferrer');s.textContent='ChatGPT dibuka. Tombol ini membuka situs resmi; login tidak tertanam di GlassScan. Untuk analisis, kembali ke GlassScan dan gunakan Kirim gambar ke ChatGPT.';});
  let pendingBlob=null,pendingPrompt='';
  b.addEventListener('click',async function(){
   const canvas=document.getElementById('previewCanvas');
@@ -75,13 +78,13 @@ document.addEventListener('DOMContentLoaded',function(){
 <button id="gsChatGPTConsentNo" class="dialog-x" type="button" aria-label="Batal">×</button>
 <small>PERSETUJUAN PRIVASI</small>
 <h2 id="gsChatGPTConsentTitle">Bagikan gambar ke ChatGPT?</h2>
-<p style="font-size:12px;line-height:1.6;color:#b7c5db">Gambar hasil scan akan dibagikan melalui menu berbagi iPhone. GlassScan tidak mengirim gambar ke server sendiri. Jika kamu memilih ChatGPT atau layanan lain, gambar akan diterima layanan tersebut sesuai pilihanmu.</p>
+<p style="font-size:12px;line-height:1.6;color:#b7c5db">Gambar hasil scan akan dibagikan melalui menu berbagi perangkat. GlassScan tidak mengirim gambar ke server sendiri. Jika kamu memilih ChatGPT atau layanan lain, gambar akan diterima layanan tersebut sesuai pilihanmu. Jangan kirim dokumen sensitif tanpa izin.</p>
 <p style="font-size:12px;line-height:1.6;color:#ffd7a3">Jangan bagikan dokumen rahasia, KTP, data rekening, atau informasi perusahaan tanpa izin yang sesuai.</p>
 <div style="display:flex;gap:8px;margin-top:14px"><button id="gsChatGPTConsentNo2" type="button" class="secondary" style="flex:1">Batal</button><button id="gsChatGPTConsentYes" type="button" class="export-btn" style="flex:1">Lanjutkan</button></div>
 </dialog>
 <script>document.addEventListener('DOMContentLoaded',()=>document.getElementById('gsChatGPTConsentNo2')?.addEventListener('click',()=>{const d=document.getElementById('gsChatGPTConsent');if(d?.open)d.close();document.getElementById('gsChatGPTQuickStatus').textContent='Dibatalkan. Gambar tidak dibagikan.';}));</script>
 <section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>Download Export PDF</button></div></section>
-<footer>• File diproses lokal - Tidak ada API eksternal <small>GlassScan v1.6 - Riwayat perubahan tersedia di atas footer</small></footer>
+<footer>• Pemrosesan scan lokal · Analisis ChatGPT memerlukan internet dan persetujuan <small>GlassScan v1.6 - Riwayat perubahan tersedia di atas footer</small></footer>
 </main>
 <dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">X</button><small>GlassScan v1.6</small><h2>Petunjuk iPhone</h2><ol><li>Buka situs GlassScan melalui Safari.</li><li>Pilih Bagikan -> Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar aset aplikasi tersimpan.</li><li>Uji mode pesawat untuk memeriksa penggunaan offline.</li></ol><p class="note">Smart Image Lab adalah pemrosesan citra lokal eksperimental, bukan model AI terlatih. OCR menggunakan runtime dan model lokal yang disediakan bersama aplikasi. Periksa hasil sebelum digunakan.</p></dialog>
 <dialog id="cropDialog" class="dialog glass crop-dialog"><button id="cropClose" class="dialog-x" aria-label="Tutup">X</button><small>MANUAL DOCUMENT ALIGNMENT</small><h2>Atur empat sudut dengan presisi</h2><p class="crop-help">Geser titik ke tepi kertas. Kaca pembesar mengikuti jari agar titik tetap terlihat. Periksa semua sudut sebelum menekan Terapkan.</p><div class="crop-stage"><canvas id="cropCanvas"></canvas></div><div class="crop-actions"><button id="cropAuto" class="secondary">Coba deteksi otomatis</button><button id="cropReset" class="secondary">Reset sudut</button><button id="cropApply" class="export-btn">Terapkan crop</button></div></dialog>
