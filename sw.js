@@ -1,5 +1,5 @@
 /* GlassScan V1.8.2 auto perspective cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v182b-force-refresh-cache';
+const CACHE_NAME = 'glassscan-v183-dewarp-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
