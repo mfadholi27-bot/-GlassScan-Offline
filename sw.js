@@ -1,5 +1,5 @@
 /* GlassScan V1.6 offline cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v160-offline-ocr';
+const CACHE_NAME = 'glassscan-v161-chatgpt-share';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
  './site-updates.js','./manifest.webmanifest',
