@@ -1,9 +1,10 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.4 · GS-184',
-  updatedAt: '28 Oktober 2026, 21:25 WIB',
+  version: 'V1.8.5 · GS-185',
+  updatedAt: '28 Oktober 2026, 21:35 WIB',
   changes: [
+   'GS-185: petunjuk ekspor JPG iPhone diarahkan ke Simpan Gambar agar hasil masuk ke aplikasi Foto, bukan File.',
    'GS-184: ekspor JPG memakai canvas.toBlob langsung agar lebih hemat memori di Safari iPhone.',
    'GS-184: intensitas efek dapat diatur sampai 200%, dengan kekuatan tiap efek tersimpan terpisah.',
    'GS-184: penyimpanan JPG memberi alur Simpan ke File yang lebih jelas pada iPhone.',
