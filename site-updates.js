@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.3 · GS-193',
-  updatedAt: '28 Oktober 2026, 23:35 WIB',
+  version: 'V1.9.4 · GS-194',
+  updatedAt: '29 Oktober 2026, 00:05 WIB',
   changes: [
+   'GS-194: validasi bentuk, luas, sisi, dan keyakinan deteksi sudut AI sebelum titik diterapkan; titik sebelumnya dipertahankan jika deteksi meragukan.',
+   'GS-194: mengurangi deteksi palsu pada tumpukan buku, kabel, dan tepi meja; untuk dokumen bertumpuk, pengguna diarahkan mengatur titik manual.',
    'GS-193: handler tombol AI memakai event listener langsung agar tidak mudah tertimpa handler UI lain; tombol direset ketika editor dibuka. GS-192: reset status tombol Deteksi sudut & crop setiap kali editor dibuka; deteksi klasik tetap bisa dijalankan jika AI tidak tersedia. GS-191: memperbaiki tombol Deteksi sudut AI yang dapat terkunci saat pemuatan model tidak selesai; pemuatan dan proses deteksi kini memiliki batas waktu serta tombol dapat dicoba ulang. GS-190: menambahkan deteksi empat sudut berbasis model ML DocAligner melalui quadscan/ONNX Runtime Web. Model diunduh saat fitur AI pertama kali digunakan; service worker mencoba menyimpan aset CDN untuk penggunaan offline berikutnya.',
    'GS-190: tombol Deteksi sudut AI mengganti deteksi otomatis di editor crop. Jika model gagal dimuat atau sudut tidak meyakinkan, GlassScan mempertahankan deteksi klasik dan editor empat titik manual sebagai cadangan.',
    'GS-189: memperkuat pemisahan Adaptive B&W dengan normalisasi pencahayaan lokal dan ambang yang lebih tegas; hasil tetap harus diperiksa pada foto nyata.',
