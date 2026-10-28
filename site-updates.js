@@ -1,9 +1,13 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.0 · GS-180',
-  updatedAt: '28 Oktober 2026, 20:20 WIB',
+  version: 'V1.8.2 · GS-182',
+  updatedAt: '28 Oktober 2026, 20:35 WIB',
   changes: [
+   'Setelah capture, GlassScan mencoba meluruskan perspektif otomatis pada hasil crop bingkai bila kontur buku cukup meyakinkan; jika tidak, mempertahankan crop bingkai agar tidak memotong salah.',
+   'Magic Color tetap aktif otomatis untuk pratinjau dan ekspor setelah foto diambil.',
+   'Setelah tombol foto ditekan, gambar langsung dipotong mengikuti area bingkai tetap (memperhitungkan object-fit: cover) dan Magic Color dipilih otomatis.',
+   'Koreksi perspektif empat sudut tetap tersedia di editor crop untuk meluruskan dokumen yang miring.',
    'Live Scanner memakai bingkai panduan tetap; tidak lagi menggambar sudut tebakan di atas video.',
    'Foto kamera disimpan tanpa koreksi perspektif otomatis yang berisiko salah; pengguna dapat memeriksa dan mengatur sudut di editor crop.',
    'Deteksi live dibatasi agar kamera ponsel lebih ringan dan garis panduan lebih stabil.',
@@ -15,7 +19,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Bingkai tetap hanya panduan komposisi, bukan deteksi tepi otomatis. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;

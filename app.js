@@ -192,15 +192,42 @@ function drawLive(){
  raf=requestAnimationFrame(drawLive)
 }
 function capture(){
- const v=$('video');
- if(!stream||!v.videoWidth){toast('Kamera belum siap');return}
- const c=document.createElement('canvas'),s=Math.min(1,2600/Math.max(v.videoWidth,v.videoHeight));
- c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);
- c.getContext('2d').drawImage(v,0,0,c.width,c.height);
- const data=c.toDataURL('image/jpeg',.97);
- pages.push({data,name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`,rotation:0});
- active=pages.length-1;render();counts();
- toast('Foto diambil. Periksa empat sudut melalui Deteksi sudut & crop sebelum menerapkan koreksi.')
+ const v=$('video'),stage=$('video').closest('.camera-stage'),frame=$('fixedScanFrame');
+ if(!stream||!v.videoWidth||!stage||!frame){toast('Kamera belum siap');return}
+ // Map the visible fixed guide rectangle back into source-video coordinates.
+ // The video uses object-fit:cover, so account for the cropped sides/top.
+ const sr=stage.getBoundingClientRect(),fr=frame.getBoundingClientRect();
+ const scale=Math.max(sr.width/v.videoWidth,sr.height/v.videoHeight);
+ const renderedW=v.videoWidth*scale,renderedH=v.videoHeight*scale;
+ const offX=(renderedW-sr.width)/2,offY=(renderedH-sr.height)/2;
+ const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+ let sx=(fr.left-sr.left+offX)/scale,sy=(fr.top-sr.top+offY)/scale;
+ let ex=(fr.right-sr.left+offX)/scale,ey=(fr.bottom-sr.top+offY)/scale;
+ sx=clamp(sx,0,v.videoWidth-1);sy=clamp(sy,0,v.videoHeight-1);
+ ex=clamp(ex,sx+1,v.videoWidth);ey=clamp(ey,sy+1,v.videoHeight);
+ const sw=ex-sx,sh=ey-sy,down=Math.min(1,2600/Math.max(sw,sh));
+ const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*down));c.height=Math.max(1,Math.round(sh*down));
+ c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
+ let output=c,autoStraightened=false;
+ // Search for a plausible document contour only inside the guide crop.
+ try{
+  const q=detectQuadOpenCV(c);
+  if(q&&q.length===4){
+   const area=Math.abs(q.reduce((sum,p,i)=>sum+p[0]*q[(i+1)%4][1]-p[1]*q[(i+1)%4][0],0)/2);
+   const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);
+   const bw=Math.max(...xs)-Math.min(...xs),bh=Math.max(...ys)-Math.min(...ys);
+   const ratio=bw/Math.max(1,bh),areaRatio=area/(c.width*c.height),margin=.015;
+   const inside=q.every(p=>p[0]>=c.width*margin&&p[0]<=c.width*(1-margin)&&p[1]>=c.height*margin&&p[1]<=c.height*(1-margin));
+   if(inside&&areaRatio>.36&&areaRatio<.94&&ratio>.34&&ratio<.98){
+    const warped=perspectiveWarp(c,q);
+    if(warped&&warped.width>100&&warped.height>100){output=warped;autoStraightened=true}
+   }
+  }
+ }catch(e){console.warn('Auto perspective correction skipped',e)}
+ const data=typeof output==='string'?output:output.toDataURL('image/jpeg',.97);
+ pages.push({data,name:'GlassScan_'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg',rotation:0});
+ active=pages.length-1;filter='magic';syncFilter();render();counts();
+ toast(autoStraightened?'Foto langsung dipotong, diluruskan, dan Magic Color diterapkan.':'Foto langsung dipotong mengikuti bingkai dan Magic Color diterapkan. Sudut buku belum cukup meyakinkan untuk diluruskan otomatis; gunakan Deteksi sudut & crop bila perlu.')
 }
 // Solve 8-parameter homography from destination points to source points.
 function solve(A,b){for(let i=0;i<8;i++){let max=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[max][i]))max=r;[A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];let v=A[i][i];if(Math.abs(v)<1e-9)throw Error('singular');for(let j=i;j<8;j++)A[i][j]/=v;b[i]/=v;for(let r=0;r<8;r++)if(r!==i){v=A[r][i];for(let j=i;j<8;j++)A[r][j]-=v*A[i][j];b[r]-=v*b[i]}}return b}
@@ -298,7 +325,7 @@ async function processedData(i,quality=.94){const p=pages[i],img=await loadImage
 async function exportPdf(){if(!pages.length)return;const b=$('exportPdf');b.disabled=true;b.textContent='Menyiapkan…';try{const imgs=[];for(let i=0;i<pages.length;i++){const data=await processedData(i,.92),img=await loadImage(data);imgs.push({data,w:img.naturalWidth,h:img.naturalHeight})}const blob=new Blob([makePdf(imgs)],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='GlassScan-Document.pdf';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);toast('PDF dibuat secara lokal')}catch(e){console.error(e);toast('PDF gagal dibuat; coba kurangi halaman')}finally{b.textContent='⇩ Export PDF';b.disabled=!pages.length}}
 function makePdf(items){const enc=new TextEncoder(),objs=[];const add=x=>{objs.push(x instanceof Uint8Array?x:enc.encode(x));return objs.length};add('<< /Type /Catalog /Pages 2 0 R >>');add('');const ids=[];items.forEach((it,k)=>{const raw=atob(it.data.split(',')[1]),jpg=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)jpg[i]=raw.charCodeAt(i);const imgId=objs.length+1;objs.push(join([enc.encode(`${imgId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${it.w} /Height ${it.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`),jpg,enc.encode('\nendstream\nendobj\n')]));const pid=objs.length+1,cid=pid+1;ids.push(pid);const pw=595.28,ph=841.89,s=Math.min(pw/it.w,ph/it.h),w=it.w*s,h=it.h*s,x=(pw-w)/2,y=(ph-h)/2;add(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${k+1} ${imgId} 0 R >> >> /Contents ${cid} 0 R >>\nendobj\n`);const st=`q\n${w} 0 0 ${h} ${x} ${y} cm\n/Im${k+1} Do\nQ\n`;add(`${cid} 0 obj\n<< /Length ${enc.encode(st).length} >>\nstream\n${st}endstream\nendobj\n`)});objs[1]=enc.encode(`2 0 obj\n<< /Type /Pages /Kids [${ids.map(i=>i+' 0 R').join(' ')}] /Count ${ids.length} >>\nendobj\n`);let parts=[enc.encode('%PDF-1.4\n%GlassScan\n')],off=parts[0].length,offsets=[0];objs.forEach((o,i)=>{offsets.push(off);const p=enc.encode(`${i+1} 0 obj\n`),s=enc.encode('\nendobj\n');parts.push(p,o,s);off+=p.length+o.length+s.length});const xref=off;let t=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`;for(let i=1;i<offsets.length;i++)t+=`${String(offsets[i]).padStart(10,'0')} 00000 n \n`;t+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;parts.push(enc.encode(t));return join(parts)}function join(arr){const n=arr.reduce((a,b)=>a+b.length,0),o=new Uint8Array(n);let p=0;for(const a of arr){o.set(a,p);p+=a.length}return o}
 window.addEventListener('resize',()=>{if($('cropDialog').open&&cropImage)drawCropEditor()});
-if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));counts();
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});await reg.update();}catch(e){console.warn('[GlassScan] Service worker update failed',e);}});counts();
 })();
 // OpenCV runtime status: keep the app usable if the library has not loaded; heuristic fallback remains available.
 (function monitorOpenCV(){

@@ -1,5 +1,5 @@
-/* GlassScan V1.8.0 fixed-frame scan cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v180-fixed-frame-guide-cache';
+/* GlassScan V1.8.2 auto perspective cache. Keep in repository root. */
+const CACHE_NAME = 'glassscan-v182c-pages-branch-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-tools.js','./local-ai.js',
