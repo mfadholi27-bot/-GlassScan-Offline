@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.8.8 · GS-188',
-  updatedAt: '28 Oktober 2026, 22:35 WIB',
+  version: 'V1.8.9 · GS-189',
+  updatedAt: '28 Oktober 2026, 22:50 WIB',
   changes: [
+   'GS-189: memperkuat pemisahan Adaptive B&W dengan normalisasi pencahayaan lokal dan ambang yang lebih tegas; hasil tetap harus diperiksa pada foto nyata.',
+   'GS-189: umpan balik pengambilan foto berupa kilatan visual dan animasi tombol; getaran dicoba pada perangkat/browser yang mendukungnya. iOS Safari biasanya tidak mendukung navigator.vibrate, sehingga kilatan visual menjadi fallback.',
+   'GS-189: model AI terlatih untuk empat tugas belum terintegrasi. Tidak ada model CNN/YOLO/U-Net/dewarping yang dibundel pada rilis ini.',
    'GS-188: filter Adaptive B&W memakai ambang lokal berdasarkan pencahayaan setempat untuk membantu teks di area berbayang; pemrosesan klasik deterministik, bukan model AI terlatih.',
    'GS-188: cache offline diperbarui ke GS-188. Model AI terlatih untuk deteksi/pemulihan gambar belum dibundel; gunakan deteksi OpenCV dan koreksi sudut manual untuk foto sulit.',
    'GS-187: menambahkan mode Color dan Book Premium dengan perataan pencahayaan lokal, koreksi warna lembut, dan penajaman konservatif tanpa menambahkan tekstur atau tanda buatan.',
