@@ -242,50 +242,71 @@ async function openDewarpEditor(){
   $('dewarpStrength').value='35';$('dewarpStrengthValue').textContent='35%';
   $('dewarpDialog').showModal();
   drawDewarpPreview(img,35);
-  $('dewarpStrength').oninput=async e=>{
+  $('dewarpStrength').oninput=e=>{
    const value=Number(e.target.value);$('dewarpStrengthValue').textContent=value+'%';
-   try{drawDewarpPreview(img,value)}catch(err){console.warn(err)}
+   try{drawDewarpPreview(img,value)}catch(err){console.warn('Dewarp preview failed',err)}
   };
- }catch(e){toast('Gagal membuka perataan kertas')}
+ }catch(e){console.error(e);toast('Gagal membuka perataan kertas')}
+}
+// Mesh-inspired 2D inverse remap. This corrects only gentle, symmetric curvature;
+// it does not infer text baselines or reconstruct a 3D page surface.
+function remapDewarp(sourceCanvas,strength){
+ const w=sourceCanvas.width,h=sourceCanvas.height,srcCtx=sourceCanvas.getContext('2d',{willReadFrequently:true});
+ const source=srcCtx.getImageData(0,0,w,h),out=srcCtx.createImageData(w,h),s=source.data,d=out.data;
+ const amount=(Math.max(0,Math.min(100,strength))/100)*Math.min(w,h)*.075;
+ const grid=24,dx=new Float32Array((grid+1)*(grid+1)),dy=new Float32Array((grid+1)*(grid+1));
+ // Build a smooth displacement mesh; nodes move less at the left/right edges
+ // and progressively more toward the middle, like a mild book-page bow.
+ for(let gy=0;gy<=grid;gy++){
+  const yn=gy/grid,vy=yn*2-1;
+  for(let gx=0;gx<=grid;gx++){
+   const xn=gx/grid*2-1,edge=1-xn*xn,idx=gy*(grid+1)+gx;
+   dx[idx]=amount*.34*edge*vy;
+   dy[idx]=amount*edge*vy;
+  }
+ }
+ // Bilinearly interpolate displacement from the mesh at every destination pixel.
+ for(let y=0;y<h;y++){
+  const gy=y/h*grid,iy=Math.min(grid-1,Math.floor(gy)),fy=gy-iy;
+  const yn=y/Math.max(1,h-1),ny=yn*2-1;
+  for(let x=0;x<w;x++){
+   const gx=x/w*grid,ix=Math.min(grid-1,Math.floor(gx)),fx=gx-ix;
+   const a=iy*(grid+1)+ix,b=a+1,c=a+grid+1,e=c+1;
+   const interp=(arr)=>((arr[a]*(1-fx)+arr[b]*fx)*(1-fy)+(arr[c]*(1-fx)+arr[e]*fx)*fy);
+   const xn=x/Math.max(1,w-1)*2-1;
+   // Add a restrained cross-axis component so the correction is genuinely 2D,
+   // while keeping the boundary stable and avoiding aggressive edge distortion.
+   const sx=x+interp(dx),sy=y+interp(dy)+amount*.10*(1-ny*ny)*xn;
+   const p=(y*w+x)*4;
+   if(sx<0||sx>w-1||sy<0||sy>h-1){d[p]=d[p+1]=d[p+2]=255;d[p+3]=255;continue}
+   const x0=Math.floor(sx),y0=Math.floor(sy),x1=Math.min(w-1,x0+1),y1=Math.min(h-1,y0+1),fxp=sx-x0,fyp=sy-y0;
+   const p00=(y0*w+x0)*4,p10=(y0*w+x1)*4,p01=(y1*w+x0)*4,p11=(y1*w+x1)*4;
+   for(let ch=0;ch<3;ch++){
+    const top=s[p00+ch]*(1-fxp)+s[p10+ch]*fxp,bottom=s[p01+ch]*(1-fxp)+s[p11+ch]*fxp;
+    d[p+ch]=top*(1-fyp)+bottom*fyp;
+   }
+   d[p+3]=255;
+  }
+ }
+ return out;
 }
 function drawDewarpPreview(img,strength){
- const c=$('dewarpPreview'),g=c.getContext('2d');
+ const c=$('dewarpPreview'),g=c.getContext('2d',{willReadFrequently:true});
  const scale=Math.min(1,900/Math.max(img.naturalWidth,img.naturalHeight));
  c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));
  g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
- if(strength>0){
-  const source=g.getImageData(0,0,c.width,c.height),out=g.createImageData(c.width,c.height),s=source.data,d=out.data,w=c.width,h=c.height;
-  const amp=(strength/100)*Math.min(w,h)*.075;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-   const xn=(x/(Math.max(1,w-1))-.5)*2;
-   const bend=amp*(1-xn*xn);
-   const sy=y+bend*(2*y/Math.max(1,h-1)-1);
-   const x0=x,y0=Math.max(0,Math.min(h-1,sy)),y1=Math.min(h-1,Math.floor(y0)+1),fy=y0-Math.floor(y0),p=(y*w+x)*4,p0=(Math.floor(y0)*w+x0)*4,p1=(y1*w+x0)*4;
-   for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
-   d[p+3]=255;
-  }
-  g.putImageData(out,0,0);
- }
+ if(strength>0){const result=remapDewarp(c,strength);g.putImageData(result,0,0)}
 }
 async function applyDewarp(){
  if(active<0||!dewarpSourceData)return;
  try{
   const img=await loadImage(dewarpSourceData),strength=Number($('dewarpStrength').value);
   if(!pages[active].beforeDewarp)pages[active].beforeDewarp=dewarpSourceData;
-  const max=1800,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
+  const max=2200,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
   const src=document.createElement('canvas');src.width=w;src.height=h;const sg=src.getContext('2d',{willReadFrequently:true});sg.drawImage(img,0,0,w,h);
-  const input=sg.getImageData(0,0,w,h),output=sg.createImageData(w,h),s=input.data,d=output.data,amp=(strength/100)*Math.min(w,h)*.075;
-  for(let y=0;y<h;y++){
-   const yn=y/Math.max(1,h-1);
-   for(let x=0;x<w;x++){
-    const xn=(x/Math.max(1,w-1)-.5)*2,sy=Math.max(0,Math.min(h-1,y+amp*(1-xn*xn)*(2*yn-1)));
-    const y0=Math.floor(sy),y1=Math.min(h-1,y0+1),fy=sy-y0,p=(y*w+x)*4,p0=(y0*w+x)*4,p1=(y1*w+x)*4;
-    for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
-    d[p+3]=255;
-   }
-  }
-  sg.putImageData(output,0,0);pages[active].data=src.toDataURL('image/jpeg',.97);
-  $('dewarpDialog').close();render();toast('Perataan geometris diterapkan. Periksa teks dan tepi halaman.');
+  sg.putImageData(remapDewarp(src,strength),0,0);
+  pages[active].data=src.toDataURL('image/jpeg',.97);
+  $('dewarpDialog').close();render();toast('Koreksi mesh 2D diterapkan. Periksa teks dan tepi halaman.');
  }catch(e){console.error(e);toast('Perataan gagal. Coba kekuatan lebih rendah.')}
 }
 function undoDewarp(){
