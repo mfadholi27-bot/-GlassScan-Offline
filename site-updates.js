@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.6 · GS-196',
-  updatedAt: '29 Oktober 2026, 00:40 WIB',
+  version: 'V1.9.7 · GS-197',
+  updatedAt: '29 Oktober 2026, 01:15 WIB',
   changes: [
+   'GS-197: deteksi sudut OpenCV memakai beberapa tingkat Canny agar lebih tahan terhadap kontras dan latar yang berbeda.',
+   'GS-197: pemeringkatan kandidat mempertimbangkan konsistensi sisi berlawanan, kualitas sudut, luas, dan posisi; deteksi tetap heuristik dan perlu uji foto nyata.',
    'GS-196: memperbaiki tombol intensitas + agar tetap aktif hingga 200% (sebelumnya berhenti di 100%).',
    'GS-196: menambahkan indikator perubahan piksel untuk membantu membandingkan setiap efek dengan foto asli.',
    'GS-196: memperkuat perbedaan Magic Color, Magic Color Pro, Color, Teks Tajam, dan Kurangi Bayangan; tetap periksa hasil visual agar tidak overprocessed.',
