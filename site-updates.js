@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.5 · GS-195',
-  updatedAt: '29 Oktober 2026, 00:20 WIB',
+  version: 'V1.9.6 · GS-196',
+  updatedAt: '29 Oktober 2026, 00:40 WIB',
   changes: [
+   'GS-196: memperbaiki tombol intensitas + agar tetap aktif hingga 200% (sebelumnya berhenti di 100%).',
+   'GS-196: menambahkan indikator perubahan piksel untuk membantu membandingkan setiap efek dengan foto asli.',
+   'GS-196: memperkuat perbedaan Magic Color, Magic Color Pro, Color, Teks Tajam, dan Kurangi Bayangan; tetap periksa hasil visual agar tidak overprocessed.',
    'GS-195: Magic Color Pro — koreksi pencahayaan lokal, pemulihan warna yang lembut, kontras dan penajaman konservatif diproses sepenuhnya di perangkat.',
    'GS-195: Magic Color Pro tidak memerlukan model atau koneksi setelah halaman aplikasi tersedia; hasil dapat diatur lewat kontrol intensitas 0–200%.',
    'GS-194: validasi bentuk, luas, sisi, dan keyakinan deteksi sudut AI sebelum titik diterapkan; titik sebelumnya dipertahankan jika deteksi meragukan.',
