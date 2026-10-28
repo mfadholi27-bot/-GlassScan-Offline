@@ -1,4 +1,4 @@
-/* GlassScan GS-190: optional on-device ML corner detection via quadscan/DocAligner.
+/* GlassScan GS-194: validated on-device ML corner detection via quadscan/DocAligner.
    First use downloads the library, ONNX runtime and ~4.5 MB model; the service worker
    caches successful cross-origin assets for later offline use. Existing OpenCV/heuristic
    detection remains the fallback. No document image is uploaded by this feature. */
@@ -49,11 +49,20 @@
   function pointList(corners) {
     if (!corners) return null;
     const keys = ['topLeft','topRight','bottomRight','bottomLeft'];
-    const points = keys.map(key => {
-      const p = corners[key];
-      return p && Number.isFinite(p.x) && Number.isFinite(p.y) ? [p.x,p.y] : null;
-    });
+    const points = keys.map(key => {const p=corners[key];return p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?[p.x,p.y]:null;});
     return points.every(Boolean) ? points : null;
+  }
+  function validateDetectedQuad(points, image) {
+    if (!points || points.length!==4 || !image || !image.naturalWidth || !image.naturalHeight) return {ok:false,reason:'Titik tidak lengkap'};
+    const w=image.naturalWidth,h=image.naturalHeight,area=Math.abs(points.reduce((s,p,i)=>s+p[0]*points[(i+1)%4][1]-p[1]*points[(i+1)%4][0],0)/2),ratio=area/(w*h);
+    if(points.some(p=>!Number.isFinite(p[0])||!Number.isFinite(p[1])||p[0]<0||p[1]<0||p[0]>=w||p[1]>=h))return {ok:false,reason:'Titik di luar foto'};
+    if(ratio<.10||ratio>.94)return {ok:false,reason:'Luas dokumen tidak masuk akal'};
+    const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+    const turns=points.map((p,i)=>cross(p,points[(i+1)%4],points[(i+2)%4]));
+    if(turns.some(v=>Math.abs(v)<w*h*.00002)||!(turns.every(v=>v>0)||turns.every(v=>v<0)))return {ok:false,reason:'Bentuk empat sudut tidak valid'};
+    const lengths=points.map((p,i)=>Math.hypot(p[0]-points[(i+1)%4][0],p[1]-points[(i+1)%4][1]));
+    if(lengths.some(v=>v<Math.min(w,h)*.08))return {ok:false,reason:'Sisi dokumen terlalu pendek'};
+    return {ok:true,areaRatio:ratio};
   }
   function install() {
     const button = document.getElementById('cropAuto');
@@ -87,7 +96,7 @@
         const result = await Promise.race([
           api.scan(cropImage, {
           mode: 'detect',
-          minDetectionConfidence: 0.12,
+          minDetectionConfidence: 0.32,
           onProgress: event => {
             if (event.phase === 'model-download') {
               const pct = event.total ? Math.min(99, Math.round(event.loaded/event.total*100)) : 0;
@@ -99,19 +108,16 @@
           new Promise((_, reject) => setTimeout(() => reject(new Error('Proses deteksi AI terlalu lama. Coba lagi atau gunakan empat titik manual.')), 30000))
         ]);
         const points = result && result.success ? pointList(result.corners) : null;
-        if (!points || !validQuad(points, cropImage)) {
-          if (typeof toast === 'function') toast('AI belum yakin menemukan empat sudut. Mencoba deteksi klasik…');
-          const fallback = detectQuad(cropImage);
-          if (fallback && validQuad(fallback, cropImage)) {
-            cropQuad = fallback; drawCropEditor();
-            if (typeof toast === 'function') toast('Deteksi klasik menemukan perkiraan sudut. Periksa sebelum diterapkan.');
-          } else if (typeof toast === 'function') toast('Sudut tidak ditemukan. Geser empat titik secara manual.');
+        const geometry = validateDetectedQuad(points, cropImage);
+        const confidence = Number.isFinite(result && result.confidence) ? result.confidence : null;
+        if (!points || !validQuad(points, cropImage) || !geometry.ok || (confidence!==null && confidence<.35)) {
+          const why=!points?'AI tidak menemukan empat titik':!geometry.ok?geometry.reason:confidence!==null&&confidence<.35?'keyakinan model terlalu rendah':'koordinat tidak valid';
+          if (typeof toast === 'function') toast('Deteksi belum cukup meyakinkan ('+why+'). Titik lama dipertahankan; atur sudut manual atau foto satu dokumen tanpa tumpukan.');
           return;
         }
         cropQuad = points;
         drawCropEditor();
-        const confidence = Number.isFinite(result.confidence) ? Math.round(result.confidence*100) : null;
-        if (typeof toast === 'function') toast('AI menemukan empat sudut'+(confidence!==null?' · keyakinan '+confidence+'%':'')+'. Periksa titik sebelum menerapkan crop.');
+        if (typeof toast === 'function') toast('AI menemukan perkiraan empat sudut'+(confidence!==null?' · keyakinan '+Math.round(confidence*100)+'%':'')+'. Periksa semua titik sebelum menerapkan crop.');
       } catch (error) {
         console.warn('[GlassScan AI corner detection]', error);
         if (typeof toast === 'function') toast('AI belum tersedia: '+(error && error.message ? error.message : 'gagal memuat model')+'. Menggunakan deteksi klasik…');
