@@ -29,33 +29,55 @@
 <script>
 document.addEventListener('DOMContentLoaded',function(){
  const b=document.getElementById('gsChatGPTQuick'),s=document.getElementById('gsChatGPTQuickStatus');
+ const dlg=document.getElementById('gsChatGPTConsent'),yes=document.getElementById('gsChatGPTConsentYes'),no=document.getElementById('gsChatGPTConsentNo');
  if(!b||b.dataset.bound)return;b.dataset.bound='1';
+ let pendingBlob=null,pendingPrompt='';
  b.addEventListener('click',async function(){
   const canvas=document.getElementById('previewCanvas');
   if(!canvas||!canvas.width||!canvas.height||document.getElementById('previewWrap')?.hidden){
    s.textContent='Ambil foto atau impor dokumen terlebih dahulu.';return;
   }
-  b.disabled=true;s.textContent='Menyiapkan gambar hasil scan…';
-  const prompt='Tolong bantu perbaiki GAMBAR DOKUMEN yang saya lampirkan, bukan menyalin atau mengolah OCR saja. Luruskan perspektif dan rotasi jika perlu, rapikan batas kertas, tingkatkan kontras dan keterbacaan tulisan, kurangi bayangan/noda latar yang mengganggu tanpa menghapus isi dokumen. Pertahankan semua teks, angka, cap, tanda tangan, dan detail asli; jangan mengarang atau mengganti isi. Kembalikan hasil sebagai gambar dokumen yang sudah dirapikan.';
   try{
-   const blob=await new Promise((resolve,reject)=>canvas.toBlob(x=>x?resolve(x):reject(new Error('Gagal membuat gambar')), 'image/jpeg',0.95));
-   const file=new File([blob],'GlassScan-hasil.jpg',{type:'image/jpeg'});
+   pendingBlob=await new Promise((resolve,reject)=>canvas.toBlob(x=>x?resolve(x):reject(new Error('Gagal membuat gambar')),'image/jpeg',0.95));
+   pendingPrompt='Tolong bantu perbaiki GAMBAR DOKUMEN yang saya lampirkan, bukan hanya OCR. Luruskan perspektif dan rotasi jika perlu, rapikan batas kertas, tingkatkan kontras dan keterbacaan tulisan, kurangi bayangan tanpa menghapus isi. Pertahankan semua teks, angka, cap, tanda tangan, dan detail asli; jangan mengarang atau mengganti isi. Kembalikan hasil sebagai gambar dokumen yang sudah dirapikan.';
+   if(dlg?.showModal) dlg.showModal();
+   else if(window.confirm('Gambar scan akan dibagikan ke aplikasi/layanan yang kamu pilih. Pastikan dokumen tidak berisi data rahasia. Lanjutkan?')) await shareImage();
+   else s.textContent='Dibatalkan. Gambar tidak dibagikan.';
+  }catch(e){s.textContent='Gagal menyiapkan gambar. Coba lagi.';}
+ });
+ async function shareImage(){
+  if(!pendingBlob)return;
+  if(dlg?.open)dlg.close();
+  b.disabled=true;s.textContent='Menyiapkan berbagi gambar…';
+  const file=new File([pendingBlob],'GlassScan-hasil.jpg',{type:'image/jpeg'});
+  try{
    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-    await navigator.share({title:'Perbaiki gambar scan GlassScan',text:prompt,files:[file]});
-    s.textContent='Gambar hasil scan dibagikan. Pilih ChatGPT pada menu berbagi jika tersedia.';
+    await navigator.share({title:'Perbaiki gambar scan GlassScan',text:pendingPrompt,files:[file]});
+    s.textContent='Menu berbagi dibuka. Pilih ChatGPT jika ingin mengirim gambar ke sana. Gambar hanya dikirim setelah kamu memilih aplikasi.';
    }else{
-    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='GlassScan-hasil.jpg';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-    try{await navigator.clipboard.writeText(prompt)}catch(e){}
+    const url=URL.createObjectURL(pendingBlob),a=document.createElement('a');a.href=url;a.download='GlassScan-hasil.jpg';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    try{await navigator.clipboard.writeText(pendingPrompt)}catch(e){}
     window.open('https://chatgpt.com/','_blank','noopener,noreferrer');
-    s.textContent='Gambar scan diunduh dan instruksi disiapkan. Buka ChatGPT, lampirkan GlassScan-hasil.jpg, lalu kirim instruksinya.';
+    s.textContent='Gambar diunduh dan instruksi disalin jika diizinkan. Di ChatGPT, lampirkan GlassScan-hasil.jpg lalu tempel instruksi. Tidak ada pengiriman otomatis.';
    }
   }catch(e){
-   if(e?.name==='AbortError')s.textContent='Berbagi dibatalkan. Gambar scan tetap di GlassScan.';
-   else s.textContent='Gagal membagikan gambar. Coba lagi, atau simpan JPG lalu lampirkan langsung di ChatGPT.';
-  }finally{b.disabled=false;}
- });
+   if(e?.name==='AbortError')s.textContent='Berbagi dibatalkan. Gambar tetap di GlassScan.';
+   else s.textContent='Berbagi gagal. Kamu dapat menyimpan JPG lalu melampirkannya sendiri di ChatGPT.';
+  }finally{b.disabled=false;pendingBlob=null;}
+ }
+ yes?.addEventListener('click',shareImage);
+ no?.addEventListener('click',()=>{if(dlg?.open)dlg.close();pendingBlob=null;s.textContent='Dibatalkan. Gambar tidak dibagikan.';});
 });
 </script>
+<dialog id="gsChatGPTConsent" class="dialog glass" aria-labelledby="gsChatGPTConsentTitle">
+<button id="gsChatGPTConsentNo" class="dialog-x" type="button" aria-label="Batal">×</button>
+<small>PERSETUJUAN PRIVASI</small>
+<h2 id="gsChatGPTConsentTitle">Bagikan gambar ke ChatGPT?</h2>
+<p style="font-size:12px;line-height:1.6;color:#b7c5db">Gambar hasil scan akan dibagikan melalui menu berbagi iPhone. GlassScan tidak mengirim gambar ke server sendiri. Jika kamu memilih ChatGPT atau layanan lain, gambar akan diterima layanan tersebut sesuai pilihanmu.</p>
+<p style="font-size:12px;line-height:1.6;color:#ffd7a3">Jangan bagikan dokumen rahasia, KTP, data rekening, atau informasi perusahaan tanpa izin yang sesuai.</p>
+<div style="display:flex;gap:8px;margin-top:14px"><button id="gsChatGPTConsentNo2" type="button" class="secondary" style="flex:1">Batal</button><button id="gsChatGPTConsentYes" type="button" class="export-btn" style="flex:1">Lanjutkan</button></div>
+</dialog>
+<script>document.addEventListener('DOMContentLoaded',()=>document.getElementById('gsChatGPTConsentNo2')?.addEventListener('click',()=>{const d=document.getElementById('gsChatGPTConsent');if(d?.open)d.close();document.getElementById('gsChatGPTQuickStatus').textContent='Dibatalkan. Gambar tidak dibagikan.';}));</script>
 <section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>Download Export PDF</button></div></section>
 <footer>• File diproses lokal - Tidak ada API eksternal <small>GlassScan v1.6 - Riwayat perubahan tersedia di atas footer</small></footer>
 </main>
