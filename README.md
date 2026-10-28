@@ -1,10 +1,10 @@
 # GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V1.8.1 · GS-181
-- Change timestamp shown in app: 28 Oktober 2026, 20:25 WIB
+- Version: V1.8.2 · GS-182
+- Change timestamp shown in app: 28 Oktober 2026, 20:35 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v181-instant-guide-crop-cache`
+- Service-worker cache: `glassscan-v182-auto-perspective-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
@@ -48,3 +48,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Magic Color is selected automatically after capture.
 - Perspective correction still requires checking/adjusting the four corners in the crop editor; fixed-frame cropping is not document-edge detection.
 - JavaScript syntax checked; physical-device crop alignment still requires testing on iPhone and Android.
+
+
+### GS-182 — Auto perspective after guide crop (28 Oktober 2026, 20:35 WIB)
+- After cropping the camera image to the fixed guide, GlassScan attempts OpenCV quadrilateral detection inside that smaller region.
+- Perspective warp is applied only if the candidate passes basic area, margin and portrait-shape gates; otherwise the guide crop is retained to avoid a destructive false correction.
+- Magic Color remains selected for preview and processed export.
+- JavaScript syntax checked. Detection accuracy and perspective alignment still require physical iPhone/Android tests with glossy and patterned-background books.
