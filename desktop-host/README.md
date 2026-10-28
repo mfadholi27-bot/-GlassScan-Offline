@@ -1,30 +1,43 @@
 # GlassScan Desktop Host (experimental)
 
-This folder is an isolated Windows desktop-host scaffold on the `feature/chatgpt-local-host` branch. It does not alter the deployed GitHub Pages PWA.
+Windows desktop wrapper for the existing GlassScan PWA with an optional local ChatGPT text assistant.
 
-## Current state
-- Electron window opens the existing GlassScan GitHub Pages app.
-- Renderer isolation is enabled: context isolation, sandbox, and Node integration disabled.
-- The preload exposes only a non-sensitive status marker.
-- **ChatGPT authentication and AI requests are not implemented yet.** No fake sign-in button is shown and no credentials are collected.
+## What is implemented in this branch
+- Electron window with context isolation, sandbox enabled, and Node integration disabled.
+- A narrow preload bridge; OAuth credentials are never exposed to the renderer.
+- A Windows setup script that clones the official OpenAI Sign in with ChatGPT DevKit locally and builds its `@siwc/local` SDK.
+- Main-process integration for sign-in, session status, model listing, document-text requests, and disconnect.
+- Electron `safeStorage` adapter for encrypted credential persistence. The app fails closed if OS encryption is unavailable.
+- Local assistant UI; user must paste OCR text into the text box. It does not yet read text directly from the scanner iframe.
 
-## Run on Windows
-Requires Node.js (LTS) and npm.
+## Requirements
+- Windows 10/11
+- Git for Windows
+- Node.js 22.12 or later
+- Internet access for dependency installation and sign-in
+
+## Setup
+From PowerShell:
 
 ```powershell
-cd desktop-host
+cd path\to\-GlassScan-Offline\desktop-host
 npm install
+npm run setup:siwc
 npm start
 ```
 
-This is a development scaffold, not a signed installer. First launch requires internet access because it loads the hosted PWA.
+First setup downloads dependencies and the official DevKit to an ignored `vendor/` folder. It is not committed to this repository. The official DevKit has its own license; review it before redistributing the application.
 
-## Next implementation gate
-Before adding ChatGPT plan usage, integrate the official OpenAI Sign in with ChatGPT DevKit in the local Node process and verify the supported SDK interfaces, OAuth callback, state/nonce/PKCE, token validation and refresh, and OS-protected credential storage. Do not expose tokens to the renderer, URL, logs, or repository. The current official example is macOS-specific, so Windows compatibility must be validated before claiming support.
+## Important limits
+- This is experimental and not yet tested on the user's Windows device.
+- The scanner is hosted in an iframe; OCR text must be copied/pasted into the assistant field manually for now.
+- The official DevKit example app is macOS-specific. This host uses the local SDK in Electron on Windows, but Windows OAuth and OS credential-storage behaviour still require real-device verification.
+- Only eligible accounts with the separate ChatGPT plan-usage permission can use the AI request feature. The official guide's current example expects Plus or Pro; Go eligibility is not guaranteed.
+- This is not an installer or signed release. Do not use it with sensitive documents until you have reviewed the data handling.
+- No AI control is added to the public GitHub Pages PWA, and no API key is embedded in browser code.
 
-Official references:
+## Official references
 - https://github.com/openai/sign-in-with-chatgpt-devkit
+- https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt
 - https://developers.openai.com/siwc/token-sharing-open-source
-- https://developers.openai.com/siwc/token-sharing-open-source/sign-in
-
-ChatGPT plan eligibility depends on the account and the integration's current eligibility rules. Do not assume Go eligibility from a successful identity sign-in.
+- https://openai.com/policies/sign-in-with-chatgpt-terms/
