@@ -1,10 +1,10 @@
-# GlassScan Offline — release candidate GS-173
+# GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V1.7.3 · GS-173
-- Change timestamp shown in app: 28 Oktober 2026, 20:05 WIB
+- Version: V1.8.0 · GS-180
+- Change timestamp shown in app: 28 Oktober 2026, 20:20 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v173-document-contour-cache`
+- Service-worker cache: `glassscan-v180-fixed-frame-guide-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
@@ -35,3 +35,9 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Alaei, A., Bui, V., Doermann, D., & Pal, U. (2024). *Document Image Quality Assessment: A Survey*. ACM Computing Surveys, 56(2). https://doi.org/10.1145/3606692
 - Wang, B., Li, C., Zou, W., et al. (2025). *A comprehensive survey on shadow removal from document images: datasets, methods, and opportunities*. Vicinagearth, 2, 1. https://doi.org/10.1007/s44336-024-00010-9
 - MDN Web Docs. *Caching — Progressive web apps*. https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching
+
+
+### GS-180 — Fixed-frame live scan (28 Oktober 2026, 20:20 WIB)
+- Live camera now shows a fixed guide frame rather than drawing unstable detected corners over the preview.
+- Captured camera images are not automatically perspective-warped based on uncertain live detection. Review and adjust the four corners in the crop editor before applying.
+- This reduces false corner overlays but does not claim CamScanner-equivalent automatic detection. Test on physical iPhone/Android devices and patterned backgrounds before release.
