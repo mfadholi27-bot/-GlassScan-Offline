@@ -36,6 +36,7 @@
       <div class="gs-row">
         <button class="primary" id="gsRunOcr">Jalankan OCR Indonesia</button>
         <button id="gsCopyOcr">Salin teks</button>
+        <button class="primary" id="gsSendChatGPT">✦ Bantu dengan ChatGPT</button>
         <button id="gsCheckAi">Periksa aset lokal</button>
       </div>
       <div class="gs-ai-progress"><span id="gsOcrProgress"></span></div>
@@ -100,6 +101,42 @@
         status('Teks OCR disalin.');
       } catch {
         status('Browser menolak akses clipboard. Pilih teks hasil OCR lalu salin manual.');
+      }
+    });
+
+    document.getElementById('gsSendChatGPT').addEventListener('click', async () => {
+      const scannedText = (result.textContent || '').trim();
+      if (!scannedText || scannedText === 'Hasil teks akan muncul di sini.') {
+        status('Jalankan OCR terlebih dahulu sebelum menggunakan ChatGPT.');
+        return;
+      }
+      const prompt = [
+        'Bantu saya memahami teks hasil pemindaian dokumen ini.',
+        'Rapikan kesalahan OCR yang jelas, buat ringkasan poin penting, dan ekstrak tanggal, nama, nomor, atau nominal jika ada.',
+        'Jangan mengarang bagian yang tidak terbaca. Tandai bagian yang meragukan dan pisahkan fakta dari interpretasi.',
+        '',
+        'TEKS HASIL SCAN:',
+        scannedText
+      ].join('\n');
+      const btn = document.getElementById('gsSendChatGPT');
+      btn.disabled = true;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'GlassScan — hasil OCR untuk ChatGPT', text: prompt });
+          status('Menu berbagi dibuka. Pilih ChatGPT untuk mengirim teks hasil OCR.');
+        } else {
+          await navigator.clipboard.writeText(prompt);
+          status('Prompt dan teks OCR disalin. ChatGPT dibuka; tempel teks di kolom chat.');
+          window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') {
+          status('Berbagi dibatalkan. Teks OCR tetap tersimpan di halaman ini.');
+        } else {
+          status('Tidak dapat membuka menu berbagi. Gunakan Salin teks, lalu tempel di ChatGPT.');
+        }
+      } finally {
+        btn.disabled = false;
       }
     });
 
