@@ -1,5 +1,5 @@
 (()=>{
-const $=id=>document.getElementById(id);const canvas=$('previewCanvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});let pages=[],active=-1,filter='original',stream=null,raf=0,facing='environment',auto=false,stable=0,lastAuto=0,toastTimer,cropImage=null,cropQuad=[],cropLayout=null,dragCorner=-1;
+const $=id=>document.getElementById(id);const canvas=$('previewCanvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});let pages=[],active=-1,filter='original',stream=null,raf=0,facing='environment',auto=false,stable=0,lastAuto=0,toastTimer,cropImage=null,cropQuad=[],cropLayout=null,dragCorner=-1,loupePointer=null;
 const toast=m=>{const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),2800)};
 $('cameraBtn').onclick=startCamera;$('importBtn').onclick=()=>$('importInput').click();$('cameraInput').onchange=e=>loadFiles(e.target.files);$('importInput').onchange=e=>loadFiles(e.target.files);$('helpBtn').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();$('closeCamera').onclick=stopCamera;
 $('switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'environment';await stopCamera(false);startCamera()};$('captureBtn').onclick=capture;
@@ -14,11 +14,38 @@ async function stopCamera(hide=true){cancelAnimationFrame(raf);if(stream){stream
 async function openCropEditor(){if(active<0)return;try{cropImage=await loadImage(pages[active].data);let q=null;try{q=detectQuad(cropImage)}catch(e){}cropQuad=validQuad(q,cropImage)?q:defaultQuad(cropImage);drawCropEditor();$('cropDialog').showModal()}catch(e){toast('Gagal membuka editor crop')}}
 function validQuad(q,im){if(!q||q.length!==4)return false;const w=im.naturalWidth,h=im.naturalHeight;return q.every(p=>Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[0]>=0&&p[1]>=0&&p[0]<w&&p[1]<h)}
 function defaultQuad(im){const w=im.naturalWidth,h=im.naturalHeight,mx=w*.07,my=h*.07;return [[mx,my],[w-mx,my],[w-mx,h-my],[mx,h-my]]}
-function drawCropEditor(){const c=$('cropCanvas'),r=c.getBoundingClientRect(),width=Math.max(280,r.width||300),height=Math.min(520,width*(cropImage.naturalHeight/cropImage.naturalWidth));c.width=Math.round(width*devicePixelRatio);c.height=Math.round(height*devicePixelRatio);c.style.height=height+'px';const g=c.getContext('2d');g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);g.clearRect(0,0,width,height);const scale=Math.min(width/cropImage.naturalWidth,height/cropImage.naturalHeight),iw=cropImage.naturalWidth*scale,ih=cropImage.naturalHeight*scale,ox=(width-iw)/2,oy=(height-ih)/2;g.fillStyle='#030914';g.fillRect(0,0,width,height);g.drawImage(cropImage,ox,oy,iw,ih);cropLayout={scale,ox,oy,width,height};const pts=cropQuad.map(p=>[ox+p[0]*scale,oy+p[1]*scale]);g.beginPath();pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.closePath();g.fillStyle='rgba(66,238,190,.13)';g.fill();g.strokeStyle='#5ef3c2';g.lineWidth=2.5;g.stroke();pts.forEach((p,i)=>{g.beginPath();g.arc(p[0],p[1],11,0,Math.PI*2);g.fillStyle='#eafff8';g.fill();g.strokeStyle='#13c99b';g.lineWidth=3;g.stroke();g.fillStyle='#092b28';g.font='bold 10px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),p[0],p[1])})}
+function drawCropEditor(){
+ const c=$('cropCanvas'),r=c.getBoundingClientRect(),width=Math.max(280,r.width||300),height=Math.min(520,width*(cropImage.naturalHeight/cropImage.naturalWidth));
+ c.width=Math.round(width*devicePixelRatio);c.height=Math.round(height*devicePixelRatio);c.style.height=height+'px';
+ const g=c.getContext('2d');g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);g.clearRect(0,0,width,height);
+ const scale=Math.min(width/cropImage.naturalWidth,height/cropImage.naturalHeight),iw=cropImage.naturalWidth*scale,ih=cropImage.naturalHeight*scale,ox=(width-iw)/2,oy=(height-ih)/2;
+ g.fillStyle='#030914';g.fillRect(0,0,width,height);g.drawImage(cropImage,ox,oy,iw,ih);cropLayout={scale,ox,oy,width,height};
+ const pts=cropQuad.map(p=>[ox+p[0]*scale,oy+p[1]*scale]);
+ g.beginPath();pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.closePath();g.fillStyle='rgba(66,238,190,.13)';g.fill();g.strokeStyle='#5ef3c2';g.lineWidth=2.5;g.stroke();
+ pts.forEach((p,i)=>{g.beginPath();g.arc(p[0],p[1],12,0,Math.PI*2);g.fillStyle='#f4fffb';g.fill();g.strokeStyle='#13c99b';g.lineWidth=3;g.stroke();g.fillStyle='#092b28';g.font='bold 10px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),p[0],p[1])});
+ // Loupe magnifier: display a zoomed crop above the finger so the touch never hides the target point.
+ if(dragCorner>=0 && loupePointer && cropImage){
+   const p=cropQuad[dragCorner],cx=p[0],cy=p[1],radius=48,zoom=3.2;
+   let lx=Math.max(radius+8,Math.min(width-radius-8,loupePointer[0]));
+   let ly=loupePointer[1]>height*.48?radius+12:height-radius-12;
+   // Keep the loupe away from the active corner when possible.
+   if(Math.hypot(lx-loupePointer[0],ly-loupePointer[1])<85) ly=ly<height/2?height-radius-12:radius+12;
+   g.save();g.beginPath();g.arc(lx,ly,radius,0,Math.PI*2);g.clip();
+   g.fillStyle='#06111e';g.fillRect(lx-radius,ly-radius,radius*2,radius*2);
+   const srcR=radius/(zoom*scale);
+   const sx=Math.max(0,Math.min(cropImage.naturalWidth-2*srcR,cx-srcR));
+   const sy=Math.max(0,Math.min(cropImage.naturalHeight-2*srcR,cy-srcR));
+   g.drawImage(cropImage,sx,sy,2*srcR,2*srcR,lx-radius,ly-radius,radius*2,radius*2);
+   g.restore();
+   g.beginPath();g.arc(lx,ly,radius,0,Math.PI*2);g.strokeStyle='#e9fff8';g.lineWidth=3;g.stroke();
+   g.beginPath();g.moveTo(lx-radius*.28,ly);g.lineTo(lx+radius*.28,ly);g.moveTo(lx,ly-radius*.28);g.lineTo(lx,ly+radius*.28);g.strokeStyle='#ffcf62';g.lineWidth=1.5;g.stroke();
+   g.fillStyle='#05111d';g.fillRect(lx-31,ly+radius+3,62,15);g.fillStyle='#a9f6de';g.font='bold 9px sans-serif';g.textAlign='center';g.fillText('ZOOM 3.2×',lx,ly+radius+11);
+ }
+}
 function cropPointer(e){const c=$('cropCanvas'),r=c.getBoundingClientRect();return [(e.clientX-r.left),e.clientY-r.top]}
-$('cropCanvas').addEventListener('pointerdown',e=>{if(!cropLayout)return;const [x,y]=cropPointer(e);let best=Infinity,idx=-1;cropQuad.forEach((p,i)=>{const px=cropLayout.ox+p[0]*cropLayout.scale,py=cropLayout.oy+p[1]*cropLayout.scale,d=Math.hypot(px-x,py-y);if(d<best){best=d;idx=i}});if(best<35){dragCorner=idx;$('cropCanvas').setPointerCapture(e.pointerId);e.preventDefault()}});
-$('cropCanvas').addEventListener('pointermove',e=>{if(dragCorner<0||!cropLayout)return;const [x,y]=cropPointer(e),L=cropLayout;cropQuad[dragCorner]=[Math.max(0,Math.min(cropImage.naturalWidth,(x-L.ox)/L.scale)),Math.max(0,Math.min(cropImage.naturalHeight,(y-L.oy)/L.scale))];drawCropEditor();e.preventDefault()});
-$('cropCanvas').addEventListener('pointerup',()=>dragCorner=-1);$('cropCanvas').addEventListener('pointercancel',()=>dragCorner=-1);
+$('cropCanvas').addEventListener('pointerdown',e=>{if(!cropLayout)return;const [x,y]=cropPointer(e);let best=Infinity,idx=-1;cropQuad.forEach((p,i)=>{const px=cropLayout.ox+p[0]*cropLayout.scale,py=cropLayout.oy+p[1]*cropLayout.scale,d=Math.hypot(px-x,py-y);if(d<best){best=d;idx=i}});if(best<35){dragCorner=idx;loupePointer=[x,y];drawCropEditor();$('cropCanvas').setPointerCapture(e.pointerId);e.preventDefault()}});
+$('cropCanvas').addEventListener('pointermove',e=>{if(dragCorner<0||!cropLayout)return;const [x,y]=cropPointer(e),L=cropLayout;loupePointer=[x,y];cropQuad[dragCorner]=[Math.max(0,Math.min(cropImage.naturalWidth,(x-L.ox)/L.scale)),Math.max(0,Math.min(cropImage.naturalHeight,(y-L.oy)/L.scale))];drawCropEditor();e.preventDefault()});
+$('cropCanvas').addEventListener('pointerup',()=>{dragCorner=-1;loupePointer=null;drawCropEditor()});$('cropCanvas').addEventListener('pointercancel',()=>{dragCorner=-1;loupePointer=null;drawCropEditor()});
 async function applyCropEditor(){if(!cropImage||!validQuad(cropQuad,cropImage)){toast('Periksa kembali posisi empat sudut');return}try{const area=Math.abs(cropQuad.reduce((s,p,i)=>s+p[0]*cropQuad[(i+1)%4][1]-p[1]*cropQuad[(i+1)%4][0],0)/2);if(area<cropImage.naturalWidth*cropImage.naturalHeight*.02){toast('Sudut terlalu berdekatan. Atur ulang.');return}const warped=perspectiveWarp(cropImage,cropQuad);pages[active].data=warped;pages[active].rotation=0;$('cropDialog').close();render();toast('Crop dan koreksi perspektif diterapkan') }catch(e){console.error(e);toast('Crop gagal. Coba atur ulang sudut')}}
 
 function detectQuadHeuristic(source){
@@ -192,7 +219,7 @@ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventLis
   const timer=setInterval(()=>{
     tries++;
     if(window.cv && typeof cv.Mat==='function' && typeof cv.findContours==='function'){
-      el.innerHTML='<span class="status-dot ready"></span><span>OpenCV.js 4.13 · mesin deteksi aktif</span>';
+      el.innerHTML='<span class="status-dot ready"></span><span>OpenCV.js · mesin deteksi aktif</span>';
       el.classList.add('ready');clearInterval(timer);
     }else if(tries>90){
       el.innerHTML='<span class="status-dot warning"></span><span>OpenCV.js belum siap · mode cadangan aktif</span>';

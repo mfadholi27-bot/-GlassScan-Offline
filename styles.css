@@ -13,3 +13,40 @@
 .opencv-status.ready .status-dot{background:#5ef3c2}
 .opencv-status.warning{border-color:rgba(255,201,92,.24);color:#ffe0a1}
 .opencv-status.warning .status-dot{background:#ffc95c}
+
+/* V0.8 layout normalization and precision-crop loupe */
+.topbar{display:flex;align-items:center;gap:11px;margin-bottom:13px;min-width:0}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:clamp(17px,4.8vw,21px);line-height:1.2;overflow-wrap:anywhere}
+.build-ribbon{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px 10px;margin:0 0 10px;padding:10px 12px;border-radius:14px}
+.build-ribbon span:last-child{grid-column:1/-1;letter-spacing:.09em}
+.build-ribbon strong{font-size:11px;text-align:right}
+.opencv-status{margin:0 0 18px;min-width:0;line-height:1.35}
+.camera-controls{gap:8px}
+.camera-controls .secondary{min-width:0;padding:10px 9px;font-size:11px;white-space:nowrap}
+.crop-dialog{width:calc(100% - 22px);padding:20px 15px;max-width:460px}
+.crop-stage canvas{width:100%;max-height:48dvh;display:block;touch-action:none}
+.crop-actions button{min-width:0;font-size:11px;padding:11px 8px;line-height:1.25}
+.capture{position:relative;min-width:0;overflow:hidden}
+.capture b,.capture small{overflow-wrap:anywhere}
+.capture-icon{display:grid;place-items:center;line-height:1}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.filter{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:48px;padding:8px;border-radius:13px;white-space:normal;text-align:left;line-height:1.2}
+.filter .sample{flex:0 0 34px;width:34px;height:34px;border-radius:10px}
+.preview-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.preview-actions button{min-width:0;overflow-wrap:anywhere}
+.export-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.export-actions button{min-width:0;white-space:normal}
+.round{flex:0 0 38px}
+@media(max-width:390px){
+ .shell{padding-left:12px;padding-right:12px}
+ .logo{width:39px;height:39px;flex:0 0 39px}
+ .brand small{font-size:8px;letter-spacing:1px}
+ .brand h1{font-size:17px}
+ .hero-visual{opacity:.5}
+ .hero-copy{max-width:78%}
+ .camera-controls .secondary{font-size:10px;padding:9px 6px}
+ .build-ribbon{font-size:9px}
+ .filters{gap:6px}
+ .filter{font-size:10px}
+}

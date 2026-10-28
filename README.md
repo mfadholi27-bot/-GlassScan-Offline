@@ -1,25 +1,21 @@
-# GlassScan v0.7 — OpenCV Integrated Beta (GS-070)
+# GlassScan v0.8 — Precision Scan UI (GS-080)
 
-## What changed
-- Adds OpenCV.js 4.13.0 script integration.
-- Uses OpenCV contour detection (`Canny`, `findContours`, `approxPolyDP`, convex quadrilateral) first for four-corner detection.
-- Keeps the existing manual four-point crop editor and perspective warp fallback.
-- Adds a visible OpenCV runtime status badge.
-- Uses a new service-worker cache name and attempts to cache OpenCV for offline reuse after a successful online load.
+## Updates
+- Version badge is clearly visible: `V0.8 · BUILD GS-080`.
+- Header/status/build badge are separated from the flex header to prevent logo/title/status misalignment.
+- Crop editor has a 3.2× magnifier loupe during drag, positioned away from the finger, with a crosshair.
+- Touch targets and filters use a more consistent responsive grid on iPhone.
+- Service-worker cache namespace changed to `glassscan-v080-gs080`.
 
-## Important connectivity/offline note
-This package references the official OpenCV.js script at `https://docs.opencv.org/4.13.0/opencv.js`. The service worker attempts to cache it on first online install. Therefore, first deployment/first load needs internet access; offline use depends on the browser successfully caching that cross-origin script. If strict guaranteed offline operation is required, include a locally bundled `opencv.js` file in the project and change the script source to `./opencv.js` (the library is large). This environment could not fetch and bundle the binary into this ZIP, so the OpenCV runtime itself is not physically embedded in this archive.
+## OpenCV
+The app still references OpenCV.js from the official OpenCV docs host and attempts to cache it after first online load. It is not embedded locally in this ZIP. Offline reuse depends on successful browser cache. The automatic detector can fail; inspect all four corners and use the manual editor.
 
-## Limitations
-- This is a beta integration, not equivalent to CamScanner. Contour detection can fail with low contrast, complex backgrounds, curved pages, or shadows; fallback heuristic is retained.
-- OpenCV detection is run on a downscaled preview for speed. The crop is applied using the existing local perspective transform and manual correction is still available.
-- Shadow correction remains a basic filter; no neural-network shadow model is bundled.
-- No OCR/searchable PDF.
-- Test on iPhone Safari before relying on important documents.
+## Important
+This version improves crop editing usability and UI alignment. It does not add a learned document-detection model or guarantee CamScanner-equivalent processing. Shadow reduction remains basic. Test on iPhone Safari.
 
 ## Deploy
-1. Extract ZIP.
-2. Upload the contents of this folder to the root of the same GitHub Pages repository, replacing old files.
+1. Extract the ZIP.
+2. Upload the contents of this folder to the root of the existing GitHub Pages repository, replacing old files.
 3. Wait for deployment.
-4. Open the page while online once; check `V0.7 · BUILD GS-070` and the OpenCV status badge.
-5. If OpenCV fails to load, the app falls back to the previous detector. If old UI remains, close Safari tab and reopen or clear site data (this may erase site-local data).
+4. Reopen the site and verify `V0.8 · BUILD GS-080`.
+5. Test by importing a photo, choosing `Deteksi sudut & crop`, then dragging each corner; the magnifier should appear during dragging.

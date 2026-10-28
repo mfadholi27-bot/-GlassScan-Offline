@@ -1,4 +1,4 @@
-const CACHE='glassscan-v070-gs070';
+const CACHE='glassscan-v080-gs080';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg'];
 const OPENCV_URL='https://docs.opencv.org/4.13.0/opencv.js';
 self.addEventListener('install',e=>e.waitUntil((async()=>{
