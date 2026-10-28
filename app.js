@@ -5,7 +5,7 @@ $('cameraBtn').onclick=startCamera;$('importBtn').onclick=()=>$('importInput').c
 $('switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'environment';await stopCamera(false);startCamera()};$('captureBtn').onclick=capture;
 $('autoBtn').onclick=()=>{guideOn=!guideOn;$('fixedScanFrame').hidden=!guideOn;$('autoBtn').textContent=`Bingkai: ${guideOn?'ON':'OFF'}`;$('autoBtn').classList.toggle('on',guideOn);toast(guideOn?'Bingkai panduan ditampilkan':'Bingkai panduan disembunyikan')};
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));render()});
-$('correctBtn').onclick=openCropEditor;$('dewarpBtn').onclick=openDewarpEditor;$('dewarpClose').onclick=()=> $('dewarpDialog').close();$('dewarpStrength').oninput=e=>{$('dewarpStrengthValue').textContent=e.target.value+'%';};$('dewarpApply').onclick=applyDewarp;$('dewarpUndo').onclick=undoDewarp;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').onclick=()=>{if(!cropImage)return;const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Perkiraan sudut dimuat. Periksa dan geser titik ke tepi kertas.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
+$('correctBtn').onclick=openCropEditor;$('dewarpBtn').onclick=openDewarpEditor;$('dewarpClose').onclick=()=> $('dewarpDialog').close();$('dewarpStrength').oninput=e=>{$('dewarpStrengthValue').textContent=e.target.value+'%';};$('dewarpApply').onclick=applyDewarp;$('dewarpUndo').onclick=undoDewarp;$('dewarpRestore').onclick=undoDewarp;$('cropClose').onclick=()=> $('cropDialog').close();$('cropAuto').onclick=()=>{if(!cropImage)return;const q=detectQuad(cropImage);if(q){cropQuad=q;drawCropEditor();toast('Perkiraan sudut dimuat. Periksa dan geser titik ke tepi kertas.')}else toast('Deteksi otomatis belum yakin. Geser empat titik secara manual.')};$('cropReset').onclick=()=>{if(cropImage){cropQuad=defaultQuad(cropImage);drawCropEditor()}};$('cropApply').onclick=applyCropEditor;
 $('deleteBtn').onclick=()=>{if(active<0)return;pages.splice(active,1);active=pages.length?Math.min(active,pages.length-1):-1;render();counts();toast('Halaman dihapus')};$('rotateBtn').onclick=()=>{if(active<0)return;pages[active].rotation=(pages[active].rotation+90)%360;render();toast('Halaman diputar')};$('saveJpgBtn').onclick=()=>active>=0&&exportJpg(active);$('exportAllJpg').onclick=()=>{pages.forEach((_,i)=>setTimeout(()=>exportJpg(i),i*400));toast('Menyiapkan file JPG satu per satu')};$('exportPdf').onclick=exportPdf;
 const readFile=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 async function loadFiles(list){const fs=[...(list||[])].filter(f=>f.type.startsWith('image/'));for(const f of fs){try{const im=await loadImage(await readFile(f)),c=document.createElement('canvas'),s=Math.min(1,2600/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);pages.push({data:c.toDataURL('image/jpeg',.96),name:f.name||`scan-${pages.length+1}.jpg`,rotation:0})}catch(e){toast('Gagal membaca gambar')}}if(fs.length){active=pages.length-1;filter='original';syncFilter();render();counts();toast(`${fs.length} gambar ditambahkan. Tekan Deteksi sudut & crop.`)}$('cameraInput').value='';$('importInput').value=''}
@@ -259,7 +259,7 @@ function drawDewarpPreview(img,strength){
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
    const xn=(x/(Math.max(1,w-1))-.5)*2;
    const bend=amp*(1-xn*xn);
-   const sy=y+bend*(y/(Math.max(1,h-1))>.5?1:-1);
+   const sy=y+bend*(2*y/Math.max(1,h-1)-1);
    const x0=x,y0=Math.max(0,Math.min(h-1,sy)),y1=Math.min(h-1,Math.floor(y0)+1),fy=y0-Math.floor(y0),p=(y*w+x)*4,p0=(Math.floor(y0)*w+x0)*4,p1=(y1*w+x0)*4;
    for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
    d[p+3]=255;
@@ -276,9 +276,9 @@ async function applyDewarp(){
   const src=document.createElement('canvas');src.width=w;src.height=h;const sg=src.getContext('2d',{willReadFrequently:true});sg.drawImage(img,0,0,w,h);
   const input=sg.getImageData(0,0,w,h),output=sg.createImageData(w,h),s=input.data,d=output.data,amp=(strength/100)*Math.min(w,h)*.075;
   for(let y=0;y<h;y++){
-   const yn=y/Math.max(1,h-1),sign=yn>.5?1:-1;
+   const yn=y/Math.max(1,h-1);
    for(let x=0;x<w;x++){
-    const xn=(x/Math.max(1,w-1)-.5)*2,sy=Math.max(0,Math.min(h-1,y+amp*(1-xn*xn)*sign));
+    const xn=(x/Math.max(1,w-1)-.5)*2,sy=Math.max(0,Math.min(h-1,y+amp*(1-xn*xn)*(2*yn-1)));
     const y0=Math.floor(sy),y1=Math.min(h-1,y0+1),fy=sy-y0,p=(y*w+x)*4,p0=(y0*w+x)*4,p1=(y1*w+x)*4;
     for(let ch=0;ch<3;ch++)d[p+ch]=s[p0+ch]*(1-fy)+s[p1+ch]*fy;
     d[p+3]=255;
