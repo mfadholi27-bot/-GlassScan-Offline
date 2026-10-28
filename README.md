@@ -1,32 +1,32 @@
-# GlassScan Offline — release candidate GS-170
+# GlassScan Offline — release candidate GS-171
 
 ## Release stamp
-- Version: V1.7.0 · GS-170
-- Last change shown in app: 28 Oktober 2026, 19:20 WIB
-- The in-app release stamp and changelog are maintained in `site-updates.js`.
-- Bump the service-worker cache name in `sw.js` for every user-facing release so installed PWAs can retrieve changed assets.
+- Version: V1.7.1 · GS-171
+- Change timestamp shown in app: 28 Oktober 2026, 19:30 WIB
+- In-app version and changelog: `site-updates.js`
+- Service-worker cache: `glassscan-v171-quality-check`
 
-## Changes in this release candidate
+## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
-- Correct the live overlay transform for `object-fit: cover`.
-- Improve illumination-field interpolation and add mild text sharpening to Enhance/Magic.
-- Display release timestamp and expandable change notes in the app.
-- Bump the service-worker cache namespace.
+- Correct live overlay mapping for `object-fit: cover`.
+- Improve illumination correction and mild text sharpening in Enhance/Magic.
+- Order quadrilateral points around their centroid and reject degenerate/self-crossing results.
+- Add an indicative document-quality panel for sharpness, brightness, dark area and highlights.
+- Refresh service-worker cache for this candidate release.
 
-## Quality / offline checklist before final
-- [ ] Bundle OpenCV.js locally and remove dependency on the remote script for first-time offline use.
-- [ ] Test automatic corner detection on plain, busy, dark, rotated, and low-contrast backgrounds.
-- [ ] Verify perspective transform with known rectangular test images; reject invalid/self-crossing quadrilaterals.
-- [ ] Compare shadow-removal output against originals to ensure ink, signatures, stamps, and colored marks are preserved.
-- [ ] Verify output at full resolution and avoid accidental downscaling or clipping.
-- [ ] Test multi-page JPG/PDF export, rotations, and large images on iPhone Safari and Android Chrome.
-- [ ] Install/update the PWA, then use airplane mode to verify launch, camera/import, crop, filters, and export.
+## Required before final release
+- [ ] Bundle OpenCV.js locally; first-time offline detection is not guaranteed while the library is external.
+- [ ] Test corner detection on plain, busy, dark, rotated and low-contrast backgrounds.
+- [ ] Verify perspective transform against known rectangular test images and reject unstable quadrilaterals.
+- [ ] Compare shadow-removal output against originals to preserve ink, signatures, stamps and colored marks.
+- [ ] Verify full-resolution output, no clipping, correct rotations and multi-page PDF/JPG export.
+- [ ] Install/update the PWA and test in airplane mode on iPhone Safari and Android Chrome.
 - [ ] Check storage quota and memory behavior on older phones.
 
-## Research direction
-Document-image quality assessment should be part of the pipeline, not only a filter preview. The next phase should estimate blur, exposure, glare, document-edge confidence, and OCR readability, then prompt the user to retake a poor image rather than silently claiming it is perfect. Shadow correction should be validated carefully because some algorithms can mistake dark text for shadow.
+## Quality panel limitations
+The quality metrics are heuristics based on a reduced preview. They are not a certified score and may flag or miss some blurry/overexposed documents. The user should inspect the page before exporting.
 
-References:
+## References
 - Alaei, A., Bui, V., Doermann, D., & Pal, U. (2024). *Document Image Quality Assessment: A Survey*. ACM Computing Surveys, 56(2). https://doi.org/10.1145/3606692
 - Wang, B., Li, C., Zou, W., et al. (2025). *A comprehensive survey on shadow removal from document images: datasets, methods, and opportunities*. Vicinagearth, 2, 1. https://doi.org/10.1007/s44336-024-00010-9
 - MDN Web Docs. *Caching — Progressive web apps*. https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching
