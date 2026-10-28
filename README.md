@@ -1,28 +1,26 @@
-# GlassScan Offline v0.3 — iPhone PWA beta
+# GlassScan Offline v0.5 — visible update build GS-050
 
-## Fitur dalam versi ini
-- Kamera live pada HTTPS dengan perkiraan kontur empat sudut yang digambar langsung.
-- Deteksi sudut heuristik dari tepi gambar; saat memotret, mencoba crop otomatis dan koreksi perspektif.
-- Tombol **Deteksi sudut & crop** untuk gambar impor/foto yang sudah ada.
-- Filter Original/warna, Hitam Putih (Otsu), Grayscale, Enhance, dan Kurangi Bayangan (normalisasi lokal perkiraan).
-- Ekspor JPG dan PDF multi-halaman yang dibuat di perangkat.
-- PWA dengan cache service worker; tidak menggunakan API, analytics, atau CDN runtime.
+## Cara memastikan versi baru benar-benar terpasang
+- Setelah deploy, halaman utama menampilkan lencana **VERSI BARU · V0.5**. Footer menampilkan **BUILD GS-050 · 28 OKT 2026**.
+- Service worker menggunakan cache baru `glassscan-offline-v05`, agar aset versi lama diganti saat aktivasi.
+- Jika masih melihat versi lama di iPhone: buka situs GitHub Pages di Safari, muat ulang; bila perlu buka Pengaturan iPhone → Safari → Lanjutan → Data Situs Web, cari domain GitHub Pages milikmu dan hapus data situs itu, lalu buka kembali. Menghapus data situs dapat menghapus data lokal situs.
 
-## Batasan penting
-Ini adalah **beta/prototipe**, bukan pengganti scanner komersial. Deteksi sudut menggunakan heuristik ekstrem tepi, bukan model ML/OpenCV robust; latar ramai, dokumen berlipat, bayangan kuat, atau tepi terpotong bisa menghasilkan sudut salah. Selalu periksa hasil. Penghilangan bayangan merupakan normalisasi sederhana, bukan pemulihan sempurna. OCR belum tersedia. File diproses di browser, tetapi setelah mengunggah ke GitHub Pages, kode sumber menjadi publik jika repositorinya publik.
+## Fitur yang tersedia
+- Kamera live pada HTTPS dan indikator kontur berbasis heuristik.
+- Impor foto, editor empat titik manual, perkiraan deteksi sudut, dan koreksi perspektif.
+- Filter Original, Magic Color, Hitam Putih, Grayscale, Teks Tajam, dan Kurangi Bayangan.
+- Ekspor JPG halaman aktif, JPG per halaman, dan PDF multi-halaman secara lokal.
 
-## Menjalankan di iPhone
-1. Unggah isi folder ini ke repositori GitHub.
-2. Aktifkan **Settings → Pages** (HTTPS).
-3. Buka URL GitHub Pages di Safari dan izinkan kamera.
-4. Untuk mode offline, buka sekali ketika online agar aset dicache; lalu uji mode pesawat.
-5. Untuk menyimpan aplikasi: Safari → Bagikan → Tambahkan ke Layar Utama.
+## Rekomendasi untuk hasil setara scanner profesional
+1. Ganti deteksi sudut heuristik dengan OpenCV.js yang disimpan lokal di proyek (bukan CDN): grayscale → blur → Canny → kontur → approxPolyDP → pilih quadrilateral terbesar yang cembung.
+2. Jalankan deteksi beberapa skala dan validasi rasio, luas, urutan sudut, dan confidence. Jangan auto-crop jika confidence rendah; minta koreksi manual.
+3. Gunakan transformasi perspektif OpenCV (`getPerspectiveTransform` + `warpPerspective`) dan resampling berkualitas.
+4. Buat pemrosesan adaptif: white balance, illumination/background normalization untuk bayangan, adaptive threshold untuk teks, serta kontrol intensitas; jangan pakai satu filter untuk semua foto.
+5. Pertahankan gambar asli dan simpan hasil crop sebagai salinan agar pengguna bisa kembali mengedit sudut.
+6. Uji kumpulan foto nyata: kertas putih di meja gelap/terang, sudut miring, bayangan, kertas kusut, formulir kecil, dan beberapa halaman. Ukur keberhasilan crop, bukan hanya tampilan UI.
 
-## Privasi
-Tidak ada pengiriman gambar ke server dari aplikasi. Gambar tetap di memori/browser dan diekspor hanya saat pengguna menekan tombol ekspor.
+## Batasan jujur
+V0.5 ini terutama membuat pembaruan terlihat jelas dan memperbaiki invalidasi cache. Algoritma deteksi masih heuristik; hasil belum dijamin setara CamScanner dan perlu diuji di perangkat. Filter bayangan masih pendekatan dasar. OCR tidak disertakan. Tidak ada API/CDN yang dipanggil saat runtime.
 
-
-## Pembaruan v0.4 — editor crop manual
-- Tombol “Deteksi sudut & crop” sekarang membuka editor empat titik. Pengguna dapat menggeser setiap titik dengan sentuhan, mencoba perkiraan otomatis, mereset, lalu menerapkan crop/perspective warp.
-- Deteksi otomatis masih heuristik dan bisa salah memilih tepi; periksa posisi titik sebelum menerapkan. Editor manual adalah jalur koreksi bila deteksi otomatis gagal.
-- Ekspor JPG tetap tersedia per halaman; PDF menggabungkan halaman. Pada iOS, Safari mungkin menampilkan pratinjau/unduhan dan pengguna dapat memilih Bagikan → Simpan ke File.
+## Deploy
+Unggah semua file di dalam folder proyek ini ke root repositori GitHub Pages (timpa file lama), commit, tunggu deploy selesai, lalu buka kembali situs. Pastikan `index.html`, `app.js`, `styles.css`, `sw.js`, `manifest.webmanifest`, dan `icon.svg` berada di tingkat yang sama.
