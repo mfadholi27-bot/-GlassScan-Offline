@@ -31,7 +31,7 @@ async function loadModels() {
     ask.disabled = true; return;
   }
   for (const model of result.models) {
-    const option = document.createElement('option'); option.value = model.slug; option.textContent = model.name || model.slug; modelSelect.append(option);
+    const option = document.createElement('option'); option.value = model.slug; option.textContent = model.displayName || model.slug; modelSelect.append(option);
   }
   ask.disabled = !modelSelect.value;
 }
