@@ -1,8 +1,8 @@
 # GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V1.8.0 · GS-180
-- Change timestamp shown in app: 28 Oktober 2026, 20:20 WIB
+- Version: V1.9.9 · GS-199
+- Change timestamp shown in app: 29 Oktober 2026, 02:05 WIB
 - In-app version and changelog: `site-updates.js`
 - Service-worker cache: `glassscan-v180-fixed-frame-guide-cache`
 
@@ -55,3 +55,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - The tool estimates text-line curvature and applies a bounded vertical remap. It is not CamScanner's proprietary algorithm or equivalent to a trained neural dewarping model.
 - Keeps the pre-correction image available through **Batalkan perataan**. If confidence is low, it refuses to change the image.
 - Required validation: test curved book pages, flat pages, sparse text, tables, colored pages, and signatures on iPhone Safari and Android Chrome; inspect for stretched/cut text before exporting.
+
+
+### GS-199 — Improved text-line dewarp resampling (29 Oktober 2026, 02:05 WIB)
+- The local text-line dewarp now samples source rows with vertical bilinear interpolation instead of copying the nearest integer row.
+- This should reduce jagged text edges for fractional row displacements while preserving the existing conservative line-detection gate and original-image restore path.
+- This is a small classical image-processing improvement; it is not neural/3D reconstruction and still requires visual checks on curved pages, small print, tables, signatures and stamps.
+- Validation status: source-level update only; no automated browser/device visual regression test has been run.
