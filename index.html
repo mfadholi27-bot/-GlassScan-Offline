@@ -2,19 +2,14 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan">
+<meta name="theme-color" content="#07111f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GlassScan v0.6">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg"><link rel="stylesheet" href="styles.css">
-<title>GlassScan Offline · v0.5</title>
+<title>GlassScan v0.6 · v0.3</title>
 </head>
 <body>
 <div class="ambient a"></div><div class="ambient b"></div>
 <main class="shell">
-<header class="topbar"><div class="logo"><span>⌗</span></div><div class="brand"><small>PRIVATE DOCUMENT STUDIO · BUILD GS-050</small><h1>GlassScan <em>Offline</em></h1></div><button class="round" id="helpBtn" aria-label="Petunjuk">?</button></header>
-<section class="release-banner" aria-label="Pembaruan aplikasi">
-  <span class="release-tag">VERSI BARU · V0.5</span>
-  <div><strong>GlassScan diperbarui</strong><p>Editor crop manual · koreksi perspektif · efek dokumen · ekspor JPG/PDF</p></div>
-  <span class="release-check">✓</span>
-</section>
+<header class="topbar"><div class="logo"><span>⌗</span></div><div class="brand"><small>PRIVATE DOCUMENT STUDIO</small><h1>GlassScan v0.7 <em>OpenCV</em></h1></div><button class="round" id="helpBtn" aria-label="Petunjuk">?</button><div class="build-ribbon"><span>SCAN ENGINE BETA</span><strong>V0.7 · BUILD GS-070</strong><span>LOCAL PROCESSING</span></div><div class="opencv-status" id="opencvStatus"><span class="status-dot"></span><span>OpenCV.js: memuat mesin visi komputer…</span></div></header>
 <section class="hero glass"><div class="hero-copy"><span class="status"><i></i> ON-DEVICE WORKSPACE</span><h2>Every page.<br><b>Perfectly clear.</b></h2><p>Scan dokumen dengan alur kerja yang bersih, privat, dan praktis.</p><div class="hero-pills"><span>◈ Local processing</span><span>▤ PDF + JPG</span></div></div><div class="hero-visual" aria-hidden="true"><div class="orb"></div><div class="sheet"><div class="sheet-head"></div><i></i><i></i><i class="w"></i><i></i><div class="signature"></div><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div><b>✦</b></div></section>
 <section class="section-title"><div><small>WORKSPACE</small><h2>Scan studio</h2></div><span class="count" id="pageCount">0 halaman</span></section>
 <section class="capture-grid"><button class="capture glass featured" id="cameraBtn"><span class="capture-icon">⌾</span><b>Live scanner</b><small>Kamera + deteksi tepi</small><span class="arrow">↗</span></button><button class="capture glass" id="importBtn"><span class="capture-icon violet">↑</span><b>Impor gambar</b><small>Foto dari galeri</small><span class="arrow">↗</span></button></section>
@@ -31,13 +26,13 @@
 <div id="emptyState" class="empty"><div class="empty-icon"><span></span></div><b>Siap memindai</b><p>Gunakan kamera atau impor gambar untuk memulai.</p></div><div id="previewWrap" class="preview-wrap" hidden><canvas id="previewCanvas"></canvas></div>
 <div class="preview-actions" id="previewActions" hidden><button id="correctBtn" class="secondary">✦ Deteksi sudut &amp; crop</button><button id="saveJpgBtn" class="secondary">Simpan JPG</button><button id="rotateBtn" class="secondary">Putar 90°</button><button id="deleteBtn" class="danger">Hapus</button></div><div id="thumbs" class="thumbs"></div></section>
 <section class="export glass"><div><small>EXPORT OPTIONS</small><h3>Simpan hasil scan</h3><p>Ekspor halaman aktif sebagai JPG atau gabungkan semua halaman menjadi PDF.</p></div><div class="export-actions"><button id="exportAllJpg" class="secondary" disabled>Semua JPG</button><button id="exportPdf" class="export-btn" disabled>⇩ Export PDF</button></div></section>
-<footer>◇ File diproses lokal · Tidak ada API eksternal <small>BUILD GS-050 · 28 OKT 2026 · GlassScan v0.5 Beta</small></footer>
+<footer>◇ File diproses lokal · Tidak ada API eksternal <small>GlassScan v0.6 · Scan effects beta</small></footer>
 </main>
-<dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GLASSSCAN OFFLINE</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Pemrosesan gambar berlangsung lokal. Periksa dan sesuaikan empat titik crop secara manual. Filter Magic Color, Teks Tajam, Hitam Putih, dan pengurangan bayangan adalah efek pemrosesan lokal; hasil berbeda menurut pencahayaan. Belum ada OCR.</p></dialog>
+<dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">×</button><small>GlassScan v0.6</small><h2>Petunjuk iPhone</h2><ol><li>Unggah file ZIP ini ke repositori GitHub milikmu.</li><li>Aktifkan GitHub Pages di Settings → Pages.</li><li>Buka situs HTTPS di Safari dan pilih Bagikan → Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar file aplikasi tersimpan, lalu uji mode pesawat.</li></ol><p class="note">Pemrosesan gambar berlangsung lokal. Periksa dan sesuaikan empat titik crop secara manual. Filter Magic Color, Teks Tajam, Hitam Putih, dan pengurangan bayangan adalah efek pemrosesan lokal; hasil berbeda menurut pencahayaan. Belum ada OCR.</p></dialog>
 <dialog id="cropDialog" class="dialog glass crop-dialog">
  <button id="cropClose" class="dialog-x" aria-label="Tutup">×</button><small>MANUAL DOCUMENT ALIGNMENT</small><h2>Atur empat sudut</h2><p class="crop-help">Geser titik cyan ke sudut kertas. Perbesar halaman jika perlu; hasil crop baru diterapkan setelah kamu menekan Terapkan.</p>
  <div class="crop-stage"><canvas id="cropCanvas"></canvas></div>
  <div class="crop-actions"><button id="cropAuto" class="secondary">Coba deteksi otomatis</button><button id="cropReset" class="secondary">Reset sudut</button><button id="cropApply" class="export-btn">Terapkan crop</button></div>
  </dialog>
-<div id="toast" role="status" aria-live="polite"></div><script src="app.js"></script>
+<div id="toast" role="status" aria-live="polite"></div><script async src="https://docs.opencv.org/4.13.0/opencv.js" id="opencvScript"></script><script src="app.js"></script>
 </body></html>

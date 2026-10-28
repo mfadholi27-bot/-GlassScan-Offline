@@ -20,7 +20,127 @@ $('cropCanvas').addEventListener('pointerdown',e=>{if(!cropLayout)return;const [
 $('cropCanvas').addEventListener('pointermove',e=>{if(dragCorner<0||!cropLayout)return;const [x,y]=cropPointer(e),L=cropLayout;cropQuad[dragCorner]=[Math.max(0,Math.min(cropImage.naturalWidth,(x-L.ox)/L.scale)),Math.max(0,Math.min(cropImage.naturalHeight,(y-L.oy)/L.scale))];drawCropEditor();e.preventDefault()});
 $('cropCanvas').addEventListener('pointerup',()=>dragCorner=-1);$('cropCanvas').addEventListener('pointercancel',()=>dragCorner=-1);
 async function applyCropEditor(){if(!cropImage||!validQuad(cropQuad,cropImage)){toast('Periksa kembali posisi empat sudut');return}try{const area=Math.abs(cropQuad.reduce((s,p,i)=>s+p[0]*cropQuad[(i+1)%4][1]-p[1]*cropQuad[(i+1)%4][0],0)/2);if(area<cropImage.naturalWidth*cropImage.naturalHeight*.02){toast('Sudut terlalu berdekatan. Atur ulang.');return}const warped=perspectiveWarp(cropImage,cropQuad);pages[active].data=warped;pages[active].rotation=0;$('cropDialog').close();render();toast('Crop dan koreksi perspektif diterapkan') }catch(e){console.error(e);toast('Crop gagal. Coba atur ulang sudut')}}
-function detectQuad(source){const w=source.videoWidth||source.naturalWidth||source.width,h=source.videoHeight||source.naturalHeight||source.height;if(!w||!h)return null;const sw=220,sh=Math.max(120,Math.round(sw*h/w)),c=document.createElement('canvas');c.width=sw;c.height=sh;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(source,0,0,sw,sh);const d=x.getImageData(0,0,sw,sh).data,gray=new Uint8Array(sw*sh);for(let i=0,p=0;i<d.length;i+=4,p++)gray[p]=.299*d[i]+.587*d[i+1]+.114*d[i+2];const edges=[];let mags=[];for(let y=2;y<sh-2;y+=1)for(let xx=2;xx<sw-2;xx+=1){const p=y*sw+xx,gx=Math.abs(gray[p+1]-gray[p-1])+Math.abs(gray[p+sw]-gray[p-sw]);if(gx>26)mags.push(gx),edges.push([xx,y,xx+y, y-xx])}if(edges.length<80)return null;const marginX=sw*.055,marginY=sh*.055;let tl=[Infinity,0,0],tr=[Infinity,0,0],br=[-Infinity,0,0],bl=[-Infinity,0,0];for(const [xx,y,s,diff] of edges){if(xx<marginX||xx>sw-marginX||y<marginY||y>sh-marginY)continue;if(s<tl[0])tl=[s,xx,y];if(xx-y<tr[0])tr=[xx-y,xx,y];if(s>br[0])br=[s,xx,y];if(xx-y>bl[0])bl=[xx-y,xx,y]}let q=[[tl[1],tl[2]],[tr[1],tr[2]],[br[1],br[2]],[bl[1],bl[2]]];if(q.some(p=>!Number.isFinite(p[0])))return null;q=q.map(p=>[p[0]*w/sw,p[1]*h/sh]);const area=Math.abs(q.reduce((s,p,i)=>s+p[0]*q[(i+1)%4][1]-p[1]*q[(i+1)%4][0],0)/2);if(area<w*h*.06)return null;return q}
+
+function detectQuadHeuristic(source){
+  const w=source.videoWidth||source.naturalWidth||source.width;
+  const h=source.videoHeight||source.naturalHeight||source.height;
+  if(!w||!h)return null;
+  const sw=320,sh=Math.max(180,Math.round(sw*h/w));
+  const c=document.createElement('canvas');c.width=sw;c.height=sh;
+  const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(source,0,0,sw,sh);
+  const raw=g.getImageData(0,0,sw,sh).data, n=sw*sh, gray=new Float32Array(n);
+  for(let i=0,p=0;i<raw.length;i+=4,p++)gray[p]=.299*raw[i]+.587*raw[i+1]+.114*raw[i+2];
+  // Smooth a little to reduce sensor noise, then calculate Sobel-like edge strength.
+  const sm=new Float32Array(n);
+  for(let y=1;y<sh-1;y++)for(let x=1;x<sw-1;x++){
+    const p=y*sw+x;sm[p]=(gray[p]+gray[p-1]+gray[p+1]+gray[p-sw]+gray[p+sw])/5;
+  }
+  const mag=new Float32Array(n),ori=new Float32Array(n);let vals=[];
+  for(let y=2;y<sh-2;y++)for(let x=2;x<sw-2;x++){
+    const p=y*sw+x;
+    const gx=-sm[p-sw-1]+sm[p-sw+1]-2*sm[p-1]+2*sm[p+1]-sm[p+sw-1]+sm[p+sw+1];
+    const gy=-sm[p-sw-1]-2*sm[p-sw]-sm[p-sw+1]+sm[p+sw-1]+2*sm[p+sw]+sm[p+sw+1];
+    const m=Math.hypot(gx,gy);mag[p]=m;ori[p]=Math.atan2(gy,gx);
+    if(m>45)vals.push(m);
+  }
+  if(vals.length<100)return null;
+  vals.sort((a,b)=>a-b);const threshold=Math.max(38,vals[Math.floor(vals.length*.62)]||45);
+  // Find a plausible four-sided paper by searching high-edge points in broad corner regions.
+  // Scores combine edge strength, distance from the image centre, and a weak paper-brightness prior.
+  const cx=sw/2,cy=sh/2,marginX=sw*.025,marginY=sh*.025;
+  const regions=[
+    (x,y)=>x<cx&&y<cy, (x,y)=>x>=cx&&y<cy,
+    (x,y)=>x>=cx&&y>=cy, (x,y)=>x<cx&&y>=cy
+  ];
+  const pts=[];
+  for(let r=0;r<4;r++){
+    let best=-Infinity,bp=null;
+    for(let y=3;y<sh-3;y+=1)for(let x=3;x<sw-3;x+=1){
+      if(!regions[r](x,y)||x<marginX||x>sw-marginX||y<marginY||y>sh-marginY)continue;
+      const p=y*sw+x,m=mag[p];if(m<threshold)continue;
+      // Favor candidate corners toward the corresponding image quadrant's outer direction,
+      // but avoid pinning to frame edges.
+      const cornerDist=Math.hypot(x-(r===0||r===3?sw*.12:sw*.88),y-(r<2?sh*.12:sh*.88));
+      const centreDist=Math.hypot(x-cx,y-cy);
+      const score=m*.75+centreDist*.16-cornerDist*.12;
+      if(score>best){best=score;bp=[x,y,m]}
+    }
+    if(!bp)return null;pts.push([bp[0],bp[1],bp[2]]);
+  }
+  // Refine each corner using a local edge-weighted centroid to avoid unstable single-pixel peaks.
+  const q=pts.map(([x,y])=>{
+    let sx=0,sy=0,swgt=0;
+    for(let yy=Math.max(2,y-9);yy<=Math.min(sh-3,y+9);yy++)for(let xx=Math.max(2,x-9);xx<=Math.min(sw-3,x+9);xx++){
+      const p=yy*sw+xx,m=mag[p];if(m<threshold)continue;
+      const d=Math.hypot(xx-x,yy-y),wt=m*Math.exp(-(d*d)/50);
+      sx+=xx*wt;sy+=yy*wt;swgt+=wt;
+    }
+    return swgt? [sx/swgt*w/sw,sy/swgt*h/sh]:[x*w/sw,y*h/sh];
+  });
+  const area=Math.abs(q.reduce((s,p,i)=>s+p[0]*q[(i+1)%4][1]-p[1]*q[(i+1)%4][0],0)/2);
+  const full=w*h;
+  if(area<full*.06||area>full*.98)return null;
+  // Reject self-crossing or degenerate quadrilaterals.
+  const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+  const cs=q.map((p,i)=>cross(p,q[(i+1)%4],q[(i+2)%4]));
+  if(cs.some(v=>Math.abs(v)<1)||!(cs.every(v=>v>0)||cs.every(v=>v<0)))return null;
+  return q;
+}
+
+
+function orderQuad(points){
+  const sum=points.map(p=>p[0]+p[1]),diff=points.map(p=>p[0]-p[1]);
+  const tl=points[sum.indexOf(Math.min(...sum))],br=points[sum.indexOf(Math.max(...sum))],
+        tr=points[diff.indexOf(Math.max(...diff))],bl=points[diff.indexOf(Math.min(...diff))];
+  const q=[tl,tr,br,bl];
+  if(new Set(q.map(p=>p.join(','))).size!==4)return null;
+  return q;
+}
+function detectQuadOpenCV(source){
+  if(!window.cv || !cv.Mat || !cv.findContours || !cv.Canny) return null;
+  let src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null,approx=null;
+  try{
+    const w=source.videoWidth||source.naturalWidth||source.width;
+    const h=source.videoHeight||source.naturalHeight||source.height;
+    if(!w||!h)return null;
+    const sw=480,sh=Math.max(240,Math.round(sw*h/w));
+    const c=document.createElement('canvas');c.width=sw;c.height=sh;
+    c.getContext('2d',{willReadFrequently:true}).drawImage(source,0,0,sw,sh);
+    src=cv.imread(c);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
+    cv.Canny(blur,edges,45,135);
+    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+    cv.dilate(edges,edges,kernel);kernel.delete();
+    contours=new cv.MatVector();hierarchy=new cv.Mat();
+    cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+    let best=null,bestArea=0;
+    const frameArea=sw*sh;
+    for(let i=0;i<contours.size();i++){
+      const cnt=contours.get(i),peri=cv.arcLength(cnt,true);approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,.02*peri,true);
+      if(approx.rows===4 && cv.isContourConvex(approx)){
+        const area=Math.abs(cv.contourArea(approx));
+        if(area>frameArea*.07 && area<frameArea*.97 && area>bestArea){
+          const pts=[];for(let j=0;j<4;j++)pts.push([approx.intAt(j,0),approx.intAt(j,1)]);
+          const ordered=orderQuad(pts);
+          if(ordered){best=ordered;bestArea=area}
+        }
+      }
+      approx.delete();approx=null;cnt.delete();
+    }
+    if(!best)return null;
+    return best.map(p=>[p[0]*w/sw,p[1]*h/sh]);
+  }catch(e){console.warn('OpenCV detect failed',e);return null}
+  finally{[src,gray,blur,edges,contours,hierarchy,approx].forEach(m=>{try{if(m)m.delete()}catch(e){}})}
+}
+function detectQuad(source){
+  // OpenCV contour detection first. Use heuristic fallback only when OpenCV is not ready
+  // or no valid four-corner contour is found.
+  const cvQuad=detectQuadOpenCV(source);
+  return cvQuad || detectQuadHeuristic(source);
+}
+
 function drawLive(){const v=$('video'),c=$('edgeCanvas'),g=c.getContext('2d');if(!stream)return;if(v.videoWidth&&v.videoHeight){const rect=v.getBoundingClientRect();const vw=rect.width, vh=rect.height;c.width=Math.round(vw*devicePixelRatio);c.height=Math.round(vh*devicePixelRatio);g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);g.clearRect(0,0,vw,vh);let q=detectQuad(v);if(q){const scale=Math.min(vw/v.videoWidth,vh/v.videoHeight),dw=v.videoWidth*scale,dh=v.videoHeight*scale,ox=(vw-dw)/2,oy=(vh-dh)/2;g.beginPath();q.forEach((p,i)=>{const x=ox+p[0]*scale,y=oy+p[1]*scale;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fillStyle='rgba(65,240,190,.10)';g.fill();g.strokeStyle='#5ef3c2';g.lineWidth=2.5;g.setLineDash([]);g.stroke();q.forEach(p=>{g.beginPath();g.arc(ox+p[0]*scale,oy+p[1]*scale,5,0,Math.PI*2);g.fillStyle='#ffffff';g.fill();g.strokeStyle='#20cda1';g.stroke()});$('detectStatus').textContent='4 SUDUT TERDETEKSI';$('detectStatus').style.color='#7fffc6';document.querySelector('.hud-dot').style.background='#53efb8';stable++}else{$('detectStatus').textContent='CARI TEPI DOKUMEN';$('detectStatus').style.color='#ffe08a';document.querySelector('.hud-dot').style.background='#ffc95c';stable=0}if(auto&&q&&stable>12&&Date.now()-lastAuto>4000){lastAuto=Date.now();capture()}}raf=requestAnimationFrame(drawLive)}
 async function capture(){const v=$('video');if(!stream||!v.videoWidth){toast('Kamera belum siap');return}const c=document.createElement('canvas');const s=Math.min(1,2600/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);c.getContext('2d').drawImage(v,0,0,c.width,c.height);let data=c.toDataURL('image/jpeg',.97);const q=detectQuad(c);if(q){try{data=perspectiveWarp(c,q)}catch(e){console.warn(e)}}pages.push({data,name:`GlassScan_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`,rotation:0});active=pages.length-1;render();counts();toast(q?'Foto diambil dan perspektif dikoreksi':'Foto diambil. Sudut tidak cukup jelas; gunakan Deteksi sudut & crop.');if(auto){auto=false;$('autoBtn').textContent='Auto: OFF';$('autoBtn').classList.remove('on');stable=0}}
 // Solve 8-parameter homography from destination points to source points.
@@ -63,4 +183,20 @@ async function exportPdf(){if(!pages.length)return;const b=$('exportPdf');b.disa
 function makePdf(items){const enc=new TextEncoder(),objs=[];const add=x=>{objs.push(x instanceof Uint8Array?x:enc.encode(x));return objs.length};add('<< /Type /Catalog /Pages 2 0 R >>');add('');const ids=[];items.forEach((it,k)=>{const raw=atob(it.data.split(',')[1]),jpg=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)jpg[i]=raw.charCodeAt(i);const imgId=objs.length+1;objs.push(join([enc.encode(`${imgId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${it.w} /Height ${it.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`),jpg,enc.encode('\nendstream\nendobj\n')]));const pid=objs.length+1,cid=pid+1;ids.push(pid);const pw=595.28,ph=841.89,s=Math.min(pw/it.w,ph/it.h),w=it.w*s,h=it.h*s,x=(pw-w)/2,y=(ph-h)/2;add(`${pid} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${k+1} ${imgId} 0 R >> >> /Contents ${cid} 0 R >>\nendobj\n`);const st=`q\n${w} 0 0 ${h} ${x} ${y} cm\n/Im${k+1} Do\nQ\n`;add(`${cid} 0 obj\n<< /Length ${enc.encode(st).length} >>\nstream\n${st}endstream\nendobj\n`)});objs[1]=enc.encode(`2 0 obj\n<< /Type /Pages /Kids [${ids.map(i=>i+' 0 R').join(' ')}] /Count ${ids.length} >>\nendobj\n`);let parts=[enc.encode('%PDF-1.4\n%GlassScan\n')],off=parts[0].length,offsets=[0];objs.forEach((o,i)=>{offsets.push(off);const p=enc.encode(`${i+1} 0 obj\n`),s=enc.encode('\nendobj\n');parts.push(p,o,s);off+=p.length+o.length+s.length});const xref=off;let t=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`;for(let i=1;i<offsets.length;i++)t+=`${String(offsets[i]).padStart(10,'0')} 00000 n \n`;t+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;parts.push(enc.encode(t));return join(parts)}function join(arr){const n=arr.reduce((a,b)=>a+b.length,0),o=new Uint8Array(n);let p=0;for(const a of arr){o.set(a,p);p+=a.length}return o}
 window.addEventListener('resize',()=>{if($('cropDialog').open&&cropImage)drawCropEditor()});
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));counts();
+})();
+// OpenCV runtime status: keep the app usable if the library has not loaded; heuristic fallback remains available.
+(function monitorOpenCV(){
+  const el=document.getElementById('opencvStatus');
+  if(!el)return;
+  let tries=0;
+  const timer=setInterval(()=>{
+    tries++;
+    if(window.cv && typeof cv.Mat==='function' && typeof cv.findContours==='function'){
+      el.innerHTML='<span class="status-dot ready"></span><span>OpenCV.js 4.13 · mesin deteksi aktif</span>';
+      el.classList.add('ready');clearInterval(timer);
+    }else if(tries>90){
+      el.innerHTML='<span class="status-dot warning"></span><span>OpenCV.js belum siap · mode cadangan aktif</span>';
+      el.classList.add('warning');clearInterval(timer);
+    }
+  },250);
 })();

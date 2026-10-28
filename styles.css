@@ -4,5 +4,12 @@
 
 .crop-dialog{max-height:90dvh;overflow:auto}.crop-dialog h2{margin-bottom:5px}.crop-help{font-size:11px;line-height:1.5;color:#9bb1c8;margin:7px 0 12px}.crop-stage{width:100%;border-radius:13px;overflow:hidden;background:#030914;border:1px solid #ffffff20;touch-action:none}.crop-stage canvas{display:block;width:100%;max-height:52dvh;object-fit:contain;touch-action:none}.crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.crop-actions .export-btn{grid-column:1/-1;min-height:44px}.preview-actions{flex-wrap:wrap}.preview-actions button{min-height:40px}
 
-/* V0.5 release visibility */
-.release-banner{display:flex;align-items:center;gap:10px;margin:-9px 0 20px;padding:12px;border:1px solid #63e6ff55;border-radius:16px;background:linear-gradient(110deg,#0fbaa91c,#8b8aff18);box-shadow:0 0 24px #63e6ff0a}.release-tag{flex:0 0 auto;font-size:9px;font-weight:900;letter-spacing:.7px;color:#06131f;background:linear-gradient(110deg,#63e6ff,#83f6ce);padding:7px 8px;border-radius:8px}.release-banner div{min-width:0;flex:1}.release-banner strong{font-size:12px;display:block}.release-banner p{font-size:10px;line-height:1.4;color:#a9bfd5;margin:3px 0 0}.release-check{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#53efb81a;border:1px solid #53efb855;color:#72f3c4;font-weight:900}@media(max-width:370px){.release-banner{gap:7px;padding:9px}.release-tag{font-size:8px;padding:6px}.release-banner p{font-size:9px}}
+.build-ribbon{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 18px 16px;padding:9px 12px;border:1px solid rgba(100,240,207,.28);border-radius:14px;background:linear-gradient(100deg,rgba(42,222,184,.12),rgba(118,133,255,.10));font-size:10px;letter-spacing:.12em;color:#a9c5dc}
+.build-ribbon strong{font-size:11px;color:#70f4cf;letter-spacing:.08em;white-space:nowrap}
+
+.opencv-status{display:flex;align-items:center;gap:8px;margin:0 18px 12px;padding:8px 11px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:11px;color:#b8c6d9}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#ffc95c;box-shadow:0 0 10px currentColor;flex:none}
+.opencv-status.ready{border-color:rgba(94,243,194,.28);color:#9ef6d9}
+.opencv-status.ready .status-dot{background:#5ef3c2}
+.opencv-status.warning{border-color:rgba(255,201,92,.24);color:#ffe0a1}
+.opencv-status.warning .status-dot{background:#ffc95c}

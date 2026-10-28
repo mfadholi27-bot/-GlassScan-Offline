@@ -1,26 +1,25 @@
-# GlassScan Offline v0.5 — visible update build GS-050
+# GlassScan v0.7 — OpenCV Integrated Beta (GS-070)
 
-## Cara memastikan versi baru benar-benar terpasang
-- Setelah deploy, halaman utama menampilkan lencana **VERSI BARU · V0.5**. Footer menampilkan **BUILD GS-050 · 28 OKT 2026**.
-- Service worker menggunakan cache baru `glassscan-offline-v05`, agar aset versi lama diganti saat aktivasi.
-- Jika masih melihat versi lama di iPhone: buka situs GitHub Pages di Safari, muat ulang; bila perlu buka Pengaturan iPhone → Safari → Lanjutan → Data Situs Web, cari domain GitHub Pages milikmu dan hapus data situs itu, lalu buka kembali. Menghapus data situs dapat menghapus data lokal situs.
+## What changed
+- Adds OpenCV.js 4.13.0 script integration.
+- Uses OpenCV contour detection (`Canny`, `findContours`, `approxPolyDP`, convex quadrilateral) first for four-corner detection.
+- Keeps the existing manual four-point crop editor and perspective warp fallback.
+- Adds a visible OpenCV runtime status badge.
+- Uses a new service-worker cache name and attempts to cache OpenCV for offline reuse after a successful online load.
 
-## Fitur yang tersedia
-- Kamera live pada HTTPS dan indikator kontur berbasis heuristik.
-- Impor foto, editor empat titik manual, perkiraan deteksi sudut, dan koreksi perspektif.
-- Filter Original, Magic Color, Hitam Putih, Grayscale, Teks Tajam, dan Kurangi Bayangan.
-- Ekspor JPG halaman aktif, JPG per halaman, dan PDF multi-halaman secara lokal.
+## Important connectivity/offline note
+This package references the official OpenCV.js script at `https://docs.opencv.org/4.13.0/opencv.js`. The service worker attempts to cache it on first online install. Therefore, first deployment/first load needs internet access; offline use depends on the browser successfully caching that cross-origin script. If strict guaranteed offline operation is required, include a locally bundled `opencv.js` file in the project and change the script source to `./opencv.js` (the library is large). This environment could not fetch and bundle the binary into this ZIP, so the OpenCV runtime itself is not physically embedded in this archive.
 
-## Rekomendasi untuk hasil setara scanner profesional
-1. Ganti deteksi sudut heuristik dengan OpenCV.js yang disimpan lokal di proyek (bukan CDN): grayscale → blur → Canny → kontur → approxPolyDP → pilih quadrilateral terbesar yang cembung.
-2. Jalankan deteksi beberapa skala dan validasi rasio, luas, urutan sudut, dan confidence. Jangan auto-crop jika confidence rendah; minta koreksi manual.
-3. Gunakan transformasi perspektif OpenCV (`getPerspectiveTransform` + `warpPerspective`) dan resampling berkualitas.
-4. Buat pemrosesan adaptif: white balance, illumination/background normalization untuk bayangan, adaptive threshold untuk teks, serta kontrol intensitas; jangan pakai satu filter untuk semua foto.
-5. Pertahankan gambar asli dan simpan hasil crop sebagai salinan agar pengguna bisa kembali mengedit sudut.
-6. Uji kumpulan foto nyata: kertas putih di meja gelap/terang, sudut miring, bayangan, kertas kusut, formulir kecil, dan beberapa halaman. Ukur keberhasilan crop, bukan hanya tampilan UI.
-
-## Batasan jujur
-V0.5 ini terutama membuat pembaruan terlihat jelas dan memperbaiki invalidasi cache. Algoritma deteksi masih heuristik; hasil belum dijamin setara CamScanner dan perlu diuji di perangkat. Filter bayangan masih pendekatan dasar. OCR tidak disertakan. Tidak ada API/CDN yang dipanggil saat runtime.
+## Limitations
+- This is a beta integration, not equivalent to CamScanner. Contour detection can fail with low contrast, complex backgrounds, curved pages, or shadows; fallback heuristic is retained.
+- OpenCV detection is run on a downscaled preview for speed. The crop is applied using the existing local perspective transform and manual correction is still available.
+- Shadow correction remains a basic filter; no neural-network shadow model is bundled.
+- No OCR/searchable PDF.
+- Test on iPhone Safari before relying on important documents.
 
 ## Deploy
-Unggah semua file di dalam folder proyek ini ke root repositori GitHub Pages (timpa file lama), commit, tunggu deploy selesai, lalu buka kembali situs. Pastikan `index.html`, `app.js`, `styles.css`, `sw.js`, `manifest.webmanifest`, dan `icon.svg` berada di tingkat yang sama.
+1. Extract ZIP.
+2. Upload the contents of this folder to the root of the same GitHub Pages repository, replacing old files.
+3. Wait for deployment.
+4. Open the page while online once; check `V0.7 · BUILD GS-070` and the OpenCV status badge.
+5. If OpenCV fails to load, the app falls back to the previous detector. If old UI remains, close Safari tab and reopen or clear site data (this may erase site-local data).
