@@ -134,3 +134,9 @@ footer{font-size:11px;line-height:1.6}
 
 /* GS-187 Premium offline scanner controls */
 #savePngBtn,#compareBtn{min-height:42px}.filters{row-gap:9px}.filter[data-filter="scanpro"]{border-color:#d5c58b40}.filter[data-filter="scanpro"] .sample{color:#e8d9a4;background:linear-gradient(145deg,#fff9df,#e9e2c8)}.preview-wrap canvas{image-rendering:auto}
+
+/* GS-189: immediate capture feedback; visual feedback works on iOS where Vibration API is unsupported. */
+.camera-stage.gs-capture-flash::after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:rgba(255,255,255,.78);animation:gsCaptureFlash .22s ease-out forwards;border-radius:inherit}
+@keyframes gsCaptureFlash{from{opacity:.9}to{opacity:0}}
+#captureBtn.gs-capture-pulse{transform:scale(.96);filter:brightness(1.45);transition:transform .08s ease,filter .12s ease}
+@media(prefers-reduced-motion:reduce){.camera-stage.gs-capture-flash::after{animation:none;opacity:.55}}
