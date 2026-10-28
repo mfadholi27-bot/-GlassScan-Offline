@@ -1,16 +1,17 @@
-# GlassScan Offline — release candidate GS-172
+# GlassScan Offline — release candidate GS-173
 
 ## Release stamp
-- Version: V1.7.2 · GS-172
-- Change timestamp shown in app: 28 Oktober 2026, 19:32 WIB
+- Version: V1.7.3 · GS-173
+- Change timestamp shown in app: 28 Oktober 2026, 20:05 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v172-opencv-offline-cache`
+- Service-worker cache: `glassscan-v173-document-contour-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
 - Correct live overlay mapping for `object-fit: cover`.
 - Improve illumination correction and mild text sharpening in Enhance/Magic.
-- Order quadrilateral points around their centroid and reject degenerate/self-crossing results.
+- Score multiple OpenCV quadrilateral candidates by document-like proportions, opposite-edge consistency, area and center position.
+- Disable the unreliable quadrant-based heuristic fallback; when OpenCV cannot find a credible contour, prefer manual corner adjustment over drawing a misleading polygon.
 - Add an indicative document-quality panel for sharpness, brightness, dark area and highlights.
 - Cache the OpenCV.js cross-origin script as an opaque response during successful online service-worker installation and serve it from cache on subsequent launches.
 - Refresh service-worker cache and update in-app changelog.
@@ -20,7 +21,7 @@ The OpenCV cache requires one successful online install/update. First-time insta
 
 ## Required before final release
 - [ ] Test first install online, wait for service worker activation, reload once, then verify camera detection in airplane mode.
-- [ ] Test corner detection on plain, busy, dark, rotated and low-contrast backgrounds.
+- [ ] Test corner detection on plain, busy, dark, rotated and low-contrast backgrounds; contour scoring is a heuristic and still needs real-device validation.
 - [ ] Verify perspective transform against known rectangular test images and reject unstable quadrilaterals.
 - [ ] Compare shadow-removal output against originals to preserve ink, signatures, stamps and colored marks.
 - [ ] Verify full-resolution output, no clipping, correct rotations and multi-page PDF/JPG export.

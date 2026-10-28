@@ -1,10 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.7.2 · GS-172',
-  updatedAt: '28 Oktober 2026, 19:32 WIB',
+  version: 'V1.7.3 · GS-173',
+  updatedAt: '28 Oktober 2026, 20:05 WIB',
   changes: [
    'Deteksi live dibatasi agar kamera ponsel lebih ringan dan garis panduan lebih stabil.',
+   'Deteksi sudut memilih kontur empat sisi yang lebih menyerupai dokumen dan menolak fallback yang sering salah memilih pola lantai.',
+   'Jika deteksi otomatis belum yakin, aplikasi tidak lagi menggambar sudut tebakan; gunakan empat titik manual pada editor crop.',
    'Overlay sudut disesuaikan dengan mode kamera object-fit: cover.',
    'Koreksi pencahayaan diperhalus; mode Enhance/Magic mendapat penajaman ringan.',
    'Urutan titik sudut diperbaiki menggunakan posisi relatif terhadap pusat quadrilateral.',

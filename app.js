@@ -133,41 +133,43 @@ function orderQuad(points){
 }
 function detectQuadOpenCV(source){
   if(!window.cv || !cv.Mat || !cv.findContours || !cv.Canny) return null;
-  let src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null,approx=null;
+  let src=null,gray=null,blur=null,edges=null,contours=null,hierarchy=null;
   try{
-    const w=source.videoWidth||source.naturalWidth||source.width;
-    const h=source.videoHeight||source.naturalHeight||source.height;
+    const w=source.videoWidth||source.naturalWidth||source.width,h=source.videoHeight||source.naturalHeight||source.height;
     if(!w||!h)return null;
-    const sw=480,sh=Math.max(240,Math.round(sw*h/w));
-    const c=document.createElement('canvas');c.width=sw;c.height=sh;
+    const sw=480,sh=Math.max(240,Math.round(sw*h/w)),c=document.createElement('canvas');c.width=sw;c.height=sh;
     c.getContext('2d',{willReadFrequently:true}).drawImage(source,0,0,sw,sh);
     src=cv.imread(c);gray=new cv.Mat();blur=new cv.Mat();edges=new cv.Mat();
-    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);
-    cv.Canny(blur,edges,45,135);
-    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-    cv.dilate(edges,edges,kernel);kernel.delete();
-    contours=new cv.MatVector();hierarchy=new cv.Mat();
-    cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
-    let best=null,bestArea=0;
-    const frameArea=sw*sh;
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);cv.GaussianBlur(gray,blur,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT);cv.Canny(blur,edges,45,135);
+    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));cv.dilate(edges,edges,kernel);kernel.delete();
+    contours=new cv.MatVector();hierarchy=new cv.Mat();cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+    const frameArea=sw*sh,center=[sw/2,sh/2],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);let best=null,bestScore=-Infinity;
     for(let i=0;i<contours.size();i++){
-      const cnt=contours.get(i),peri=cv.arcLength(cnt,true);approx=new cv.Mat();
-      cv.approxPolyDP(cnt,approx,.02*peri,true);
-      if(approx.rows===4 && cv.isContourConvex(approx)){
-        const area=Math.abs(cv.contourArea(approx));
-        if(area>frameArea*.07 && area<frameArea*.97 && area>bestArea){
-          const pts=[];for(let j=0;j<4;j++)pts.push([approx.intAt(j,0),approx.intAt(j,1)]);
-          const ordered=orderQuad(pts);
-          if(ordered){best=ordered;bestArea=area}
+      const cnt=contours.get(i),peri=cv.arcLength(cnt,true),area=Math.abs(cv.contourArea(cnt));
+      if(area<frameArea*.07||area>frameArea*.88){cnt.delete();continue}
+      for(const eps of [.012,.018,.024,.032]){
+        const approx=new cv.Mat();cv.approxPolyDP(cnt,approx,eps*peri,true);
+        if(approx.rows===4&&cv.isContourConvex(approx)){
+          const raw=[];for(let j=0;j<4;j++)raw.push([approx.intAt(j,0),approx.intAt(j,1)]);
+          const q=orderQuad(raw);
+          if(q){
+            const s=q.map((p,j)=>dist(p,q[(j+1)%4])),wq=(s[0]+s[2])/2,hq=(s[1]+s[3])/2,aspect=Math.min(wq,hq)/Math.max(wq,hq);
+            const parallel=(Math.min(s[0],s[2])/Math.max(s[0],s[2]))*(Math.min(s[1],s[3])/Math.max(s[1],s[3]));
+            const cx=q.reduce((v,p)=>v+p[0],0)/4,cy=q.reduce((v,p)=>v+p[1],0)/4,centerPenalty=Math.min(1,Math.hypot(cx-center[0],cy-center[1])/Math.hypot(center[0],center[1]));
+            if(aspect>=.24&&parallel>.30){
+              const ratio=area/frameArea,areaPreference=1-Math.min(1,Math.abs(ratio-.34)/.55);
+              const score=areaPreference*2+parallel*1.8+(1-centerPenalty)*.65-Math.abs(aspect-.68)*.35;
+              if(score>bestScore){bestScore=score;best=q.map(p=>[p[0]*w/sw,p[1]*h/sh])}
+            }
+          }
         }
+        approx.delete();
       }
-      approx.delete();approx=null;cnt.delete();
+      cnt.delete();
     }
-    if(!best)return null;
-    return best.map(p=>[p[0]*w/sw,p[1]*h/sh]);
+    return best;
   }catch(e){console.warn('OpenCV detect failed',e);return null}
-  finally{[src,gray,blur,edges,contours,hierarchy,approx].forEach(m=>{try{if(m)m.delete()}catch(e){}})}
+  finally{[src,gray,blur,edges,contours,hierarchy].forEach(m=>{try{if(m)m.delete()}catch(e){}})}
 }
 function detectQuad(source){
   // OpenCV contour detection first. Use heuristic fallback only when OpenCV is not ready
