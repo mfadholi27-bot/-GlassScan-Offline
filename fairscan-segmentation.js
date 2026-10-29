@@ -74,7 +74,7 @@
       Math.max(0, Math.min(image.naturalWidth - 1, p[0] * image.naturalWidth / w)),
       Math.max(0, Math.min(image.naturalHeight - 1, p[1] * image.naturalHeight / h))
     ]);
-    if (typeof validQuad !== 'function' || !validQuad(points, image)) throw new Error('Empat sudut hasil segmentasi tidak valid.');
+    if (!window.GlassScanCrop || !window.GlassScanCrop.isValidQuad(points, image)) throw new Error('Empat sudut hasil segmentasi tidak valid.');
     const area = Math.abs(points.reduce((s,p,i) => s + p[0]*points[(i+1)%4][1] - p[1]*points[(i+1)%4][0], 0) / 2);
     if (area / (image.naturalWidth * image.naturalHeight) < 0.12) throw new Error('Area dokumen terdeteksi terlalu kecil.');
     return points;
@@ -102,7 +102,9 @@
     button.dataset.gsFairscanBound = '1';
     button.title = 'Segmentasi dokumen FairScan (eksperimental). Pertama kali perlu internet; hasil harus diperiksa.';
     button.addEventListener('click', async () => {
-      if (typeof cropImage === 'undefined' || !cropImage) {
+      const cropApi = window.GlassScanCrop;
+      const image = cropApi && cropApi.getImage();
+      if (!image || !cropApi) {
         if (typeof toast === 'function') toast('Buka editor crop terlebih dahulu.');
         return;
       }
@@ -110,9 +112,8 @@
       status('Memuat model FairScan…');
       const start = performance.now();
       try {
-        const points = await infer(cropImage);
-        cropQuad = points;
-        if (typeof drawCropEditor === 'function') drawCropEditor();
+        const points = await infer(image);
+        cropApi.setQuad(points);
         const ms = Math.round(performance.now() - start);
         status('FairScan ✓ ' + ms + ' ms');
         if (typeof toast === 'function') toast('FairScan memperkirakan empat sudut (' + ms + ' ms). Periksa titik sebelum Terapkan crop.');
