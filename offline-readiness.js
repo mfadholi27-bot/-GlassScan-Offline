@@ -46,10 +46,22 @@
     } catch (e) {
       rows.push(row('Cache Storage', 'Tidak dapat dibaca pada konteks ini', 'warn'));
     }
-    let fairModelCached = false;\n    try { const cache = await caches.open(appCache[appCache.length - 1]); fairModelCached = !!(await cache.match('https://github.com/pynicolas/fairscan-segmentation-model/releases/download/v1.2.0/fairscan-segmentation-model.tflite')); } catch (_) {}\n    rows.push(row('Model FairScan dalam cache', fairModelCached ? 'Model ditemukan di cache' : 'Belum terverifikasi di cache', fairModelCached ? 'ok' : 'warn'));\n    rows.push(row('Kesiapan AI saat offline', fairModelCached ? 'Model tersedia; uji offline tetap diperlukan' : 'Tekan “Siapkan AI offline” saat online', fairModelCached ? 'ok' : 'warn'));
+    let fairModelCached = false;
+    try { const cache = await caches.open(appCache[appCache.length - 1]); fairModelCached = !!(await cache.match('https://github.com/pynicolas/fairscan-segmentation-model/releases/download/v1.2.0/fairscan-segmentation-model.tflite')); } catch (_) {}
+    rows.push(row('Model FairScan dalam cache', fairModelCached ? 'Model ditemukan di cache' : 'Belum terverifikasi di cache', fairModelCached ? 'ok' : 'warn'));
+    rows.push(row('Kesiapan AI saat offline', fairModelCached ? 'Model tersedia; uji offline tetap diperlukan' : 'Tekan “Siapkan AI offline” saat online', fairModelCached ? 'ok' : 'warn'));
     rows.push(row('Privasi gambar', 'Tidak ada unggahan otomatis oleh pemeriksaan ini', 'ok'));
     out.innerHTML = rows.join('');
     btn.disabled = false; btn.textContent = 'Periksa lagi';
   }
-  document.getElementById('gsOfflineCheck').addEventListener('click', check);\n  document.getElementById('gsPrepareAI').addEventListener('click', async () => {\n    const btn = document.getElementById('gsPrepareAI'), status = document.getElementById('gsPrepareStatus');\n    if (!navigator.onLine) { status.textContent = 'Perlu internet untuk unduhan pertama.'; return; }\n    if (!window.GlassScanFairScan || typeof window.GlassScanFairScan.prepare !== 'function') { status.textContent = 'Modul FairScan belum tersedia. Muat ulang halaman.'; return; }\n    btn.disabled = true; status.textContent = 'Mengunduh runtime dan model…';\n    try { await window.GlassScanFairScan.prepare(); status.textContent = 'Model berhasil dimuat. Memeriksa cache…'; await check(); }\n    catch (e) { console.error('[GlassScan offline preparation]', e); status.textContent = 'Gagal menyiapkan AI: ' + (e && e.message ? e.message : 'runtime/model tidak tersedia'); }\n    finally { btn.disabled = false; }\n  });
+  document.getElementById('gsOfflineCheck').addEventListener('click', check);
+  document.getElementById('gsPrepareAI').addEventListener('click', async () => {
+    const btn = document.getElementById('gsPrepareAI'), status = document.getElementById('gsPrepareStatus');
+    if (!navigator.onLine) { status.textContent = 'Perlu internet untuk unduhan pertama.'; return; }
+    if (!window.GlassScanFairScan || typeof window.GlassScanFairScan.prepare !== 'function') { status.textContent = 'Modul FairScan belum tersedia. Muat ulang halaman.'; return; }
+    btn.disabled = true; status.textContent = 'Mengunduh runtime dan model…';
+    try { await window.GlassScanFairScan.prepare(); status.textContent = 'Model berhasil dimuat. Memeriksa cache…'; await check(); }
+    catch (e) { console.error('[GlassScan offline preparation]', e); status.textContent = 'Gagal menyiapkan AI: ' + (e && e.message ? e.message : 'runtime/model tidak tersedia'); }
+    finally { btn.disabled = false; }
+  });
 })();
