@@ -32,9 +32,10 @@
     rows.push(row('OpenCV.js', window.cv && window.cv.Mat ? 'Runtime tersedia' : 'Belum tersedia; deteksi cadangan mungkin dipakai', window.cv && window.cv.Mat ? 'ok' : 'warn'));
     rows.push(row('Tesseract.js', window.Tesseract ? 'Library tersedia' : 'Library belum tersedia', window.Tesseract ? 'ok' : 'warn'));
     rows.push(row('Detektor ML Quadscan', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'API tersedia pada sesi ini' : 'Opsional; belum dimuat', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'ok' : 'warn'));
+    let appCache = [];
     try {
       const keys = await caches.keys();
-      const appCache = keys.filter(k => k.startsWith('glassscan-'));
+      appCache = keys.filter(k => k.startsWith('glassscan-'));
       rows.push(row('Cache aplikasi', appCache.length ? appCache.join(', ') : 'Belum ditemukan', appCache.length ? 'ok' : 'warn'));
       if (appCache.length) {
         const cache = await caches.open(appCache[appCache.length - 1]);
