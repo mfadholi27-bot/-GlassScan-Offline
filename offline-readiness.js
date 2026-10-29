@@ -16,7 +16,7 @@
   const card = document.createElement('section');
   card.id = 'gsOfflineCard';
   card.className = 'gs-offline-card';
-  card.innerHTML = '<div class="gs-offline-head"><h3>Privasi & kesiapan offline</h3><button type="button" id="gsOfflineCheck">Periksa perangkat</button></div><p>GlassScan memproses gambar di perangkat. Namun, sebagian mesin AI pihak ketiga dapat memerlukan unduhan saat pemakaian pertama. Pemeriksaan ini melaporkan kondisi yang bisa diverifikasi—bukan jaminan semua fitur siap offline.</p><div class="gs-offline-results" id="gsOfflineResults" aria-live="polite"><div class="gs-offline-row"><span>Status</span><span class="gs-offline-state warn">Belum diperiksa</span></div></div>';
+  card.innerHTML = '<div class="gs-offline-head"><h3>Privasi & kesiapan offline</h3><button type="button" id="gsOfflineCheck">Periksa perangkat</button></div><p>GlassScan memproses gambar di perangkat. Gunakan Siapkan AI offline saat terhubung internet untuk mengunduh runtime/model FairScan. Status hanya hijau jika kondisi benar-benar terverifikasi; penyimpanan browser dapat menghapus cache sewaktu-waktu.</p><div style="margin-top:8px"><button type="button" id="gsPrepareAI">Siapkan AI offline</button><span id="gsPrepareStatus" role="status" style="margin-left:8px;font-size:12px"></span></div><div class="gs-offline-results" id="gsOfflineResults" aria-live="polite"><div class="gs-offline-row"><span>Status</span><span class="gs-offline-state warn">Belum diperiksa</span></div></div>';
   anchor.insertAdjacentElement('afterend', card);
 
   function row(label, value, kind) {
@@ -31,10 +31,11 @@
     rows.push(row('Service worker', ('serviceWorker' in navigator && navigator.serviceWorker.controller) ? 'Aktif di halaman ini' : 'Belum mengontrol halaman', ('serviceWorker' in navigator && navigator.serviceWorker.controller) ? 'ok' : 'warn'));
     rows.push(row('OpenCV.js', window.cv && window.cv.Mat ? 'Runtime tersedia' : 'Belum tersedia; deteksi cadangan mungkin dipakai', window.cv && window.cv.Mat ? 'ok' : 'warn'));
     rows.push(row('Tesseract.js', window.Tesseract ? 'Library tersedia' : 'Library belum tersedia', window.Tesseract ? 'ok' : 'warn'));
-    rows.push(row('Detektor ML Quadscan', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'API tersedia pada sesi ini' : 'Belum dimuat pada sesi ini', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'ok' : 'warn'));
+    rows.push(row('Detektor ML Quadscan', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'API tersedia pada sesi ini' : 'Opsional; belum dimuat', window.Quadscan && typeof window.Quadscan.scan === 'function' ? 'ok' : 'warn'));
+    let appCache = [];
     try {
       const keys = await caches.keys();
-      const appCache = keys.filter(k => k.startsWith('glassscan-'));
+      appCache = keys.filter(k => k.startsWith('glassscan-'));
       rows.push(row('Cache aplikasi', appCache.length ? appCache.join(', ') : 'Belum ditemukan', appCache.length ? 'ok' : 'warn'));
       if (appCache.length) {
         const cache = await caches.open(appCache[appCache.length - 1]);
@@ -46,10 +47,22 @@
     } catch (e) {
       rows.push(row('Cache Storage', 'Tidak dapat dibaca pada konteks ini', 'warn'));
     }
-    rows.push(row('Model AI siap offline', 'Belum dapat dipastikan otomatis', 'warn'));
+    let fairModelCached = false;
+    try { const cache = await caches.open(appCache[appCache.length - 1]); fairModelCached = !!(await cache.match('https://github.com/pynicolas/fairscan-segmentation-model/releases/download/v1.2.0/fairscan-segmentation-model.tflite')); } catch (_) {}
+    rows.push(row('Model FairScan dalam cache', fairModelCached ? 'Model ditemukan di cache' : 'Belum terverifikasi di cache', fairModelCached ? 'ok' : 'warn'));
+    rows.push(row('Kesiapan AI saat offline', fairModelCached ? 'Model tersedia; uji offline tetap diperlukan' : 'Tekan “Siapkan AI offline” saat online', fairModelCached ? 'ok' : 'warn'));
     rows.push(row('Privasi gambar', 'Tidak ada unggahan otomatis oleh pemeriksaan ini', 'ok'));
     out.innerHTML = rows.join('');
     btn.disabled = false; btn.textContent = 'Periksa lagi';
   }
   document.getElementById('gsOfflineCheck').addEventListener('click', check);
+  document.getElementById('gsPrepareAI').addEventListener('click', async () => {
+    const btn = document.getElementById('gsPrepareAI'), status = document.getElementById('gsPrepareStatus');
+    if (!navigator.onLine) { status.textContent = 'Perlu internet untuk unduhan pertama.'; return; }
+    if (!window.GlassScanFairScan || typeof window.GlassScanFairScan.prepare !== 'function') { status.textContent = 'Modul FairScan belum tersedia. Muat ulang halaman.'; return; }
+    btn.disabled = true; status.textContent = 'Mengunduh runtime dan model…';
+    try { await window.GlassScanFairScan.prepare(); status.textContent = 'Model berhasil dimuat. Memeriksa cache…'; await check(); }
+    catch (e) { console.error('[GlassScan offline preparation]', e); status.textContent = 'Gagal menyiapkan AI: ' + (e && e.message ? e.message : 'runtime/model tidak tersedia'); }
+    finally { btn.disabled = false; }
+  });
 })();

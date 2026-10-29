@@ -96,6 +96,11 @@
       if (output && typeof output.dispose === 'function') output.dispose();
     }
   }
+  // Expose an explicit preparation action for the privacy/offline diagnostics panel.
+  // Successful model load proves this session can load the model; offline persistence is checked separately.
+  window.GlassScanFairScan = window.GlassScanFairScan || {};
+  window.GlassScanFairScan.prepare = async () => { await getModel(); return true; };
+
   function install() {
     const button = $('fairscanAuto');
     if (!button || button.dataset.gsFairscanBound) return;
