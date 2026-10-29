@@ -1,5 +1,5 @@
 /* GlassScan V1.9.9 dewarp bilinear cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v199-dewarp-bilinear-cache';
+const CACHE_NAME = 'glassscan-v200-ruled-table-dewarp-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-corner.js','./ai-tools.js','./local-ai.js',
