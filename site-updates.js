@@ -4,6 +4,7 @@
   version: 'V2.0.3 · GS-203',
   updatedAt: '29 Oktober 2026',
   changes: [
+   'GS-203: menambahkan pemeriksaan kesiapan offline.',
    'GS-201: perataan halaman buku memperkirakan profil lengkungan untuk setiap baris teks lalu menginterpolasikannya secara vertikal sebagai mesh 2D.',
    'GS-201: deteksi baris menghitung awal goresan tinta, bukan hanya jumlah piksel gelap, agar garis tabel panjang lebih kecil kemungkinannya dianggap sebagai teks.',
    'GS-201: pemrosesan dibatasi pada sisi terpanjang 2600 piksel dan tetap menolak koreksi bila profil lengkungan tidak konsisten; wajib diperiksa sebelum ekspor.',
