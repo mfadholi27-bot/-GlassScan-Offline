@@ -1,8 +1,8 @@
 # GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V1.9.9 · GS-199
-- Change timestamp shown in app: 29 Oktober 2026, 02:05 WIB
+- Version: V2.0.0 · GS-200
+- Change timestamp shown in app: 29 Oktober 2026, 13:30 WIB
 - In-app version and changelog: `site-updates.js`
 - Service-worker cache: `glassscan-v180-fixed-frame-guide-cache`
 
@@ -62,3 +62,10 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - This should reduce jagged text edges for fractional row displacements while preserving the existing conservative line-detection gate and original-image restore path.
 - This is a small classical image-processing improvement; it is not neural/3D reconstruction and still requires visual checks on curved pages, small print, tables, signatures and stamps.
 - Validation status: source-level update only; no automated browser/device visual regression test has been run.
+
+
+### GS-200 — Dewarp text-line detection on ruled tables (29 Oktober 2026, 13:30 WIB)
+- Increased the horizontal-projection threshold and reduced smoothing so sparse vertical table borders are less likely to connect the whole page into one text block.
+- Relaxed page-edge and band-height bounds slightly to keep more plausible text rows.
+- Safety behavior remains conservative: if the detector cannot estimate enough consistent text rows, it leaves the source image unchanged.
+- Validation status: code updated in the publishing branch's development PR; real-device visual testing is still required.
