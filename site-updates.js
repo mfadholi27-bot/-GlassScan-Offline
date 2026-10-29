@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V2.0.5 · GS-205',
+  version: 'V2.0.6 · GS-206',
   updatedAt: '29 Oktober 2026',
   changes: [
+   'GS-206: menambahkan integrasi browser eksperimental FairScan TFLite untuk segmentasi area kertas dan estimasi empat sudut; model/runtime dimuat saat diperlukan dan dicache setelah berhasil.',
+   'GS-206: segmentasi AI tidak menggantikan deteksi klasik/manual; jika runtime, model, atau mask tidak valid, pengguna dapat kembali ke alur crop yang ada.',
    'GS-205: tema Minimalism putih-hitam dengan hierarki visual sederhana dan layout responsif.','GS-205: panel validasi OCR lokal membandingkan foto asli dan hasil perataan menggunakan teks acuan; hasil tidak dikirim ke server.','GS-205: cache service worker diperbarui agar perubahan tema dan panel QA terpasang.','GS-203: menambahkan pemeriksaan kesiapan offline.',
    'GS-201: perataan halaman buku memperkirakan profil lengkungan untuk setiap baris teks lalu menginterpolasikannya secara vertikal sebagai mesh 2D.',
    'GS-201: deteksi baris menghitung awal goresan tinta, bukan hanya jumlah piksel gelap, agar garis tabel panjang lebih kecil kemungkinannya dianggap sebagai teks.',
