@@ -177,3 +177,84 @@ footer{color:#777;border-top:1px solid var(--line);padding-top:16px}
 #gsReleaseStamp{background:#fff!important;border:1px solid var(--line)!important;box-shadow:none!important;color:#191919!important}
 #gsReleaseStamp strong{color:#191919!important}#gsReleaseStamp span{color:#777!important}#gsReleaseStamp summary{color:#333!important}#gsReleaseStamp details p{color:#666!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+
+/* GS-207: clean, balanced scanner workspace */
+:root{--bg:#f7f7f5;--text:#191919;--muted:#73736d;--line:#e7e7e2;--cyan:#191919;--violet:#70706b}
+.shell{max-width:760px;padding-left:16px;padding-right:16px}
+.topbar{gap:12px;margin-bottom:18px;padding-bottom:12px}
+.logo{width:46px;height:46px;min-width:46px;border-radius:14px}
+.logo span{font-size:20px}
+.brand small{font-size:9px;letter-spacing:1.2px}
+.brand h1{font-size:clamp(21px,5vw,27px);margin-top:3px}
+.round{width:40px;height:40px;min-width:40px;border-radius:13px}
+.build-ribbon{display:none}
+.opencv-status{margin:0 0 14px;padding:7px 10px;font-size:10px}
+.hero{min-height:190px!important;padding:20px!important;margin-bottom:22px;border-radius:20px}
+.hero-copy{max-width:76%}
+.hero-copy .status{font-size:9px;padding:6px 8px}
+.hero h2{font-size:clamp(29px,7vw,38px);margin:13px 0 7px;line-height:1.05}
+.hero p{font-size:12px;line-height:1.5;max-width:260px}
+.hero-pills{margin-top:10px}
+.hero-pills span{font-size:9px;padding:6px 8px}
+.hero-visual{transform:scale(.82);transform-origin:top right;right:0;opacity:.72}
+.section-title{margin:0 1px 11px}
+.section-title h2{font-size:21px}
+.count,.micro{font-size:10px;padding:7px 9px}
+.capture-grid{gap:10px;margin-bottom:22px}
+.capture{min-height:128px;padding:14px;border-radius:17px;gap:7px}
+.capture-icon{width:43px;height:43px;border-radius:13px;margin-bottom:2px;background:#f1f1ed!important;color:#191919!important;font-size:0}
+.capture-icon svg{width:25px;height:25px}
+.capture b{font-size:14px;line-height:1.2}
+.capture small{font-size:10px;line-height:1.35}
+.arrow{font-size:16px;right:12px;top:11px}
+.filter-heading{margin-top:0}
+.filters{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:19px}
+.filter{min-height:70px;padding:9px 7px;gap:7px;font-size:10px;border-radius:13px;justify-content:center;text-align:center}
+.filter .sample{flex:0 0 31px;width:31px;height:31px;border-radius:9px}
+.sample svg{width:21px;height:21px}
+.preview{padding:15px;border-radius:18px;margin-bottom:11px}
+.preview-head{gap:8px;margin-bottom:11px}
+.preview-head h3,.camera-head h3,.export h3{font-size:16px;margin-top:4px}
+.preview-head small,.camera-head small,.export small{font-size:9px;letter-spacing:1px}
+.local-badge{font-size:9px;padding:6px 7px}
+.empty{min-height:150px;padding:16px;border-radius:14px}
+.empty b{font-size:13px}
+.empty p{font-size:11px}
+.preview-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px}
+.preview-actions button{min-height:40px;padding:9px;font-size:10px;border-radius:11px}
+.preview-actions .btn-icon{width:18px;height:18px;min-width:18px}
+.preview-actions .btn-icon svg{width:18px;height:18px}
+.thumb{flex-basis:52px;height:60px;border-radius:10px}
+.export{padding:15px;border-radius:18px;margin-bottom:16px}
+.export p{font-size:11px;line-height:1.5;margin:6px 0 11px}
+.export-actions{gap:7px}
+.export-actions button{font-size:11px;min-height:42px;padding:10px;border-radius:11px}
+#gsChatGPTQuickPanel{display:none!important}
+#savePngBtn,#compareBtn,#rotateBtn{display:none!important}
+#restoreDewarpBtn[hidden]{display:none!important}
+footer{font-size:9px;line-height:1.5}
+footer small{font-size:8px}
+.camera-panel{padding:12px;border-radius:17px}
+.camera-note{font-size:10px}
+.crop-dialog{padding:18px 13px}
+.crop-dialog h2{font-size:21px;line-height:1.15}
+.crop-help{font-size:11px}
+.crop-actions{gap:7px}
+.crop-actions button{font-size:10px}
+@media(max-width:390px){
+ .shell{padding-left:12px;padding-right:12px}
+ .hero{min-height:180px!important;padding:16px!important}
+ .hero-copy{max-width:80%}
+ .hero-visual{right:-14px;opacity:.48;transform:scale(.72)}
+ .capture{min-height:120px;padding:12px}
+ .capture b{font-size:13px}
+ .filter{font-size:9px;padding:8px 4px}
+ .filters{gap:6px}
+ .preview{padding:12px}
+ .preview-actions button{font-size:9px;padding:8px 5px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .capture,.filter,.secondary,.export-btn,.round{transition:transform .16s ease,border-color .16s ease,background-color .16s ease}
+ .capture:active,.filter:active,.secondary:active,.export-btn:active,.round:active{transform:scale(.98)}
+}
