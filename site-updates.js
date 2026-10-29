@@ -1,9 +1,11 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.9 · GS-199',
-  updatedAt: '29 Oktober 2026, 02:05 WIB',
+  version: 'V2.0.0 · GS-200',
+  updatedAt: '29 Oktober 2026, 13:30 WIB',
   changes: [
+   'GS-200: memperbaiki deteksi baris teks pada formulir bertabel dengan mengabaikan kepadatan piksel rendah dari garis vertikal, agar tabel tidak terbaca sebagai satu blok teks.',
+   'GS-200: ambang proyeksi dan pemisahan baris disesuaikan; foto tidak diubah bila baris teks tetap tidak cukup meyakinkan.',
    'GS-199: perataan baris teks menggunakan interpolasi vertikal bilinear untuk mengurangi tepi huruf bergerigi setelah koreksi.',
    'GS-199: pemrosesan tetap lokal; bila deteksi baris teks tidak cukup meyakinkan, gambar tidak diubah dan foto asli dapat dipulihkan.',
    'GS-198: prototipe Ratakan Kertas lokal berbasis analisis geometri baris teks; tidak mengirim foto ke server dan menyediakan pemulihan foto asli.',
