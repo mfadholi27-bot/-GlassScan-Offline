@@ -68,12 +68,14 @@ async function dewarpPageByTextLines(image){
   if(v<170)rowInk[y]++;
  }
  function smooth1(a,r){const out=new Float32Array(a.length);for(let i=0;i<a.length;i++){let s=0,n=0;for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++){s+=a[j];n++}out[i]=s/n}return out}
- const proj=smooth1(rowInk,2),peak=Math.max(...proj),threshold=Math.max(2,sw*.004);
+ // Ignore low, near-constant ink from vertical table borders; otherwise ruled forms can look like one continuous text block.
+ const proj=smooth1(rowInk,1),peak=Math.max(...proj),threshold=Math.max(7,sw*.018);
  if(peak<threshold*1.7)return {ok:false,message:'Belum ditemukan baris teks yang cukup jelas. Coba foto dokumen yang lebih tajam.'};
  const bands=[];let start=-1,last=-1;
- for(let y=0;y<sh;y++){if(proj[y]>=threshold){if(start<0)start=y;last=y}else if(start>=0&&y-last>3){if(last-start>=1)bands.push([start,last]);start=-1}}
+ for(let y=0;y<sh;y++){if(proj[y]>=threshold){if(start<0)start=y;last=y}else if(start>=0&&y-last>2){if(last-start>=1)bands.push([start,last]);start=-1}}
  if(start>=0&&last-start>=1)bands.push([start,last]);
- const usable=bands.filter(([a,b])=>b-a<Math.max(24,sh*.045)&&a>sh*.015&&b<sh*.985);
+ // Keep text rows near page edges, but reject very tall merged regions and border noise.
+ const usable=bands.filter(([a,b])=>b-a<Math.max(32,sh*.06)&&a>sh*.008&&b<sh*.992);
  if(usable.length<3)return {ok:false,message:'Teks terlalu sedikit untuk memperkirakan lengkungan dengan aman.'};
  const bins=36,step=sw/bins,bandData=[];
  for(const [y0,y1] of usable){
