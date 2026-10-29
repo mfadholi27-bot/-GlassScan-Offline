@@ -1,10 +1,10 @@
 # GlassScan Offline — release candidate GS-180
 
 ## Release stamp
-- Version: V2.0.0 · GS-200
-- Change timestamp shown in app: 29 Oktober 2026, 13:30 WIB
+- Version: V2.0.1 · GS-201
+- Change timestamp shown in app: 29 Oktober 2026, 13:45 WIB
 - In-app version and changelog: `site-updates.js`
-- Service-worker cache: `glassscan-v180-fixed-frame-guide-cache`
+- Service-worker cache: `glassscan-v201-book-dewarp-mesh-cache`
 
 ## Implemented
 - Throttle live corner detection to reduce phone workload and overlay jitter.
@@ -69,3 +69,11 @@ The quality metrics are heuristics based on a reduced preview. They are not a ce
 - Relaxed page-edge and band-height bounds slightly to keep more plausible text rows.
 - Safety behavior remains conservative: if the detector cannot estimate enough consistent text rows, it leaves the source image unchanged.
 - Validation status: code updated in the publishing branch's development PR; real-device visual testing is still required.
+
+
+### GS-201 — Curved book-page dewarping mesh (29 Oktober 2026, 13:45 WIB)
+- Estimates an individual curvature profile for each detected text-line band and interpolates between profiles vertically to form a 2D remap, rather than averaging every row into one global curve.
+- Detects likely text rows by counting dark-stroke starts, reducing sensitivity to long table rules and vertical borders.
+- Uses bilinear vertical resampling and limits output to 2600 px on the longest side for mobile memory/performance.
+- Conservative gate: if too few consistent line profiles are detected, no correction is applied and the original remains available.
+- Limitations: classical image processing only; severe folds, low-contrast text, columns, tables, and irregular page geometry may still fail. No browser/iPhone visual test has yet been completed.
