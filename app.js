@@ -130,10 +130,17 @@ async function dewarpPageByTextLines(image){
  const src=oc.getImageData(0,0,outW,outH),dst=oc.createImageData(outW,outH),sd=src.data,dd=dst.data;
  const sampleCurve=(profile,x)=>{const bx=Math.max(0,Math.min(bins-1,x*(bins-1))),i=Math.floor(bx),j=Math.min(bins-1,i+1),t=bx-i;return profile.curve[i]*(1-t)+profile.curve[j]*t};
  const analysisToOut=outH/sh;
+ // GS-204: profiles are sorted by vertical position. Walk them once instead of
+ // searching the full profile list for every output row (important on tall iPhone photos).
+ let profileHi=0;
  for(let y=0;y<outH;y++){
   const ay=y/analysisToOut;
-  let hi=profiles.findIndex(p=>p.y>=ay),lo;
-  if(hi<0){hi=profiles.length-1;lo=hi}else if(hi===0)lo=0;else lo=hi-1;
+  while(profileHi<profiles.length-1 && profiles[profileHi].y<ay)profileHi++;
+  let hi=profileHi,lo;
+  if(profiles[hi].y<ay && hi===profiles.length-1){lo=hi}
+  else if(hi===0)lo=0;
+  else if(profiles[hi].y>=ay)lo=hi-1;
+  else lo=hi;
   const upper=profiles[hi],lower=profiles[lo],t=hi===lo?0:Math.max(0,Math.min(1,(ay-lower.y)/(upper.y-lower.y)));
   for(let x=0;x<outW;x++){
    const xn=x/Math.max(1,outW-1),curve=sampleCurve(lower,xn)*(1-t)+sampleCurve(upper,xn)*t;
