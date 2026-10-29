@@ -1,10 +1,10 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V2.0.3 · GS-203',
+  version: 'V2.0.5 · GS-205',
   updatedAt: '29 Oktober 2026',
   changes: [
-   'GS-203: menambahkan pemeriksaan kesiapan offline.',
+   'GS-205: tema Minimalism putih-hitam dengan hierarki visual sederhana dan layout responsif.','GS-205: panel validasi OCR lokal membandingkan foto asli dan hasil perataan menggunakan teks acuan; hasil tidak dikirim ke server.','GS-205: cache service worker diperbarui agar perubahan tema dan panel QA terpasang.','GS-203: menambahkan pemeriksaan kesiapan offline.',
    'GS-201: perataan halaman buku memperkirakan profil lengkungan untuk setiap baris teks lalu menginterpolasikannya secara vertikal sebagai mesh 2D.',
    'GS-201: deteksi baris menghitung awal goresan tinta, bukan hanya jumlah piksel gelap, agar garis tabel panjang lebih kecil kemungkinannya dianggap sebagai teks.',
    'GS-201: pemrosesan dibatasi pada sisi terpanjang 2600 piksel dan tetap menolak koreksi bila profil lengkungan tidak konsisten; wajib diperiksa sebelum ekspor.',
@@ -57,7 +57,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'GS-199 meningkatkan interpolasi piksel, bukan rekonstruksi 3D. Periksa huruf kecil, garis tabel, tanda tangan, dan stempel sebelum ekspor. Deteksi sudut AI memerlukan koneksi internet saat pertama kali memuat library/runtime/model; aset CDN dicache saat berhasil, tetapi mode offline berikutnya tetap harus diuji pada perangkat dan browser yang digunakan. Empat model AI untuk penghilang bayangan, dewarping halaman, dan pemulihan teks belum terintegrasi. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'GS-205 menambahkan panel uji OCR perbandingan, tetapi panel ini belum membuktikan FairScan TFLite model telah terintegrasi. Integrasi model browser dan pengujian nyata iPhone 12 masih harus dilakukan. GS-199 meningkatkan interpolasi piksel, bukan rekonstruksi 3D. Periksa huruf kecil, garis tabel, tanda tangan, dan stempel sebelum ekspor. Deteksi sudut AI memerlukan koneksi internet saat pertama kali memuat library/runtime/model; aset CDN dicache saat berhasil, tetapi mode offline berikutnya tetap harus diuji pada perangkat dan browser yang digunakan. Empat model AI untuk penghilang bayangan, dewarping halaman, dan pemulihan teks belum terintegrasi. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;

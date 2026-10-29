@@ -146,3 +146,34 @@ footer{font-size:11px;line-height:1.6}
 
 /* GS-196: make effect feedback readable on mobile */
 .effect-difference{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(5,16,30,.68);border:1px solid rgba(140,170,220,.22);font-size:.8rem;color:#b9cbe4;line-height:1.4}.effect-difference[data-level="low"]{color:#ffd18b;border-color:#ffd18b66}.effect-difference[data-level="high"]{color:#75f0cb;border-color:#75f0cb66}.effect-control .effect-scale{display:flex;justify-content:space-between;gap:8px}
+
+
+/* GS-205: Minimalism theme — quiet surfaces, restrained monochrome, clear hierarchy. */
+:root{color-scheme:light;--bg:#f7f7f5;--text:#191919;--muted:#6f6f6b;--cyan:#191919;--violet:#6f6f6b;--line:#e5e5e1;--glass:#ffffff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:var(--bg);color:var(--text);padding:0 0 env(safe-area-inset-bottom)}
+.ambient{display:none}.shell{max-width:780px;padding:calc(18px + env(safe-area-inset-top)) 18px 28px}
+.glass,.hero.glass,.capture.glass,.preview.glass,.export.glass,.camera-panel.glass{background:#fff;border:1px solid var(--line);box-shadow:0 2px 12px #00000005;border-radius:18px}
+.topbar{padding-bottom:14px;border-bottom:1px solid var(--line)}.logo{background:#191919;border-radius:11px;box-shadow:none}.logo span{color:#fff}
+.brand small,.section-title small,.hero-copy .status,.build-ribbon,.preview-head small,.camera-head small,.export small{letter-spacing:.12em;color:var(--muted)}
+.brand h1{color:#191919;letter-spacing:-.045em}.brand h1 em{color:#6f6f6b;font-style:normal}
+.round{background:#fff;color:#191919;border:1px solid var(--line);box-shadow:none}
+.build-ribbon{border:0;background:transparent;padding:12px 0;color:#73736f}.build-ribbon strong{color:#191919}
+.opencv-status{background:#fff;border:1px solid var(--line);color:#555;border-radius:12px}
+.hero{padding:22px!important;min-height:220px}.hero-copy h2{letter-spacing:-.06em;color:#171717}.hero-copy h2 b{color:#777;font-weight:600}.hero-copy p{color:#6f6f6b}
+.hero-pills span{background:#f5f5f2;border:1px solid #ecece8;color:#5f5f5a}.hero-visual .orb{background:#f1f1ed;box-shadow:none}.hero-visual .sheet{background:#fff;box-shadow:0 8px 28px #0000000c;border:1px solid #deded8}
+.section-title h2{letter-spacing:-.045em}.count,.micro{color:#777}
+.capture{color:#191919;text-align:left}.capture.featured{background:#191919!important;color:#fff;border-color:#191919}.capture.featured small,.capture.featured .arrow{color:#ccc}.capture-icon,.capture-icon.violet{background:#f1f1ed;color:#191919;border-radius:12px}.capture.featured .capture-icon{background:#333;color:#fff}
+.filter{background:#fff;border:1px solid var(--line);color:#666}.filter.active{background:#191919;color:#fff;border-color:#191919;box-shadow:none}.sample{border-radius:7px}
+.preview-head h3,.camera-head h3,.export h3{color:#191919}.local-badge{background:#f5f5f2;color:#4a4a46}.local-badge i{background:#333}
+.secondary,.camera-controls .secondary{background:#fff;color:#191919;border:1px solid #deded8;box-shadow:none}.export-btn{background:#191919;color:#fff;border:1px solid #191919;box-shadow:none}
+.danger{background:#fff!important;color:#b42318!important;border:1px solid #f0d6d3!important}
+.empty{background:#fafaf8;border:1px dashed #d9d9d3;color:#555}.empty p,.camera-note{color:#777}.preview-wrap{background:#f4f4f0;border-radius:12px}
+.camera-stage{border-radius:14px}.shutter{box-shadow:none}.opencv-status .status-dot{background:#777}
+.dialog{background:#fff;color:#191919;border:1px solid var(--line);box-shadow:0 20px 60px #0002}.dialog p,.crop-help{color:#666}
+footer{color:#777;border-top:1px solid var(--line);padding-top:16px}
+#gsChatGPTQuickPanel{background:#fff!important;border:1px solid var(--line)!important;border-radius:18px!important}
+#gsChatGPTQuickPanel p,#gsChatGPTQuickStatus{color:#666!important}
+#gsChatGPTQuickPanel button{background:#191919!important;color:#fff!important;border:1px solid #191919!important}
+#gsReleaseStamp{background:#fff!important;border:1px solid var(--line)!important;box-shadow:none!important;color:#191919!important}
+#gsReleaseStamp strong{color:#191919!important}#gsReleaseStamp span{color:#777!important}#gsReleaseStamp summary{color:#333!important}#gsReleaseStamp details p{color:#666!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
