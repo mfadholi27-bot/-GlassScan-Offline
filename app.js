@@ -59,57 +59,91 @@ async function applyCropEditor(){if(!cropImage||!validQuad(cropQuad,cropImage)){
 // GS-198: local, classical text-line dewarping. Independent approximation,
 // not CamScanner's proprietary implementation or a trained neural model.
 async function dewarpPageByTextLines(image){
- const maxW=720,scale=Math.min(1,maxW/image.naturalWidth),sw=Math.max(160,Math.round(image.naturalWidth*scale)),sh=Math.max(160,Math.round(image.naturalHeight*scale));
+ // GS-201: estimate a separate curvature profile for each text-line band,
+ // then interpolate those profiles vertically to form a conservative 2D dewarp mesh.
+ const maxW=840,analysisScale=Math.min(1,maxW/image.naturalWidth),sw=Math.max(180,Math.round(image.naturalWidth*analysisScale)),sh=Math.max(180,Math.round(image.naturalHeight*analysisScale));
  const probe=document.createElement('canvas');probe.width=sw;probe.height=sh;
  const pg=probe.getContext('2d',{willReadFrequently:true});pg.drawImage(image,0,0,sw,sh);
- const pixels=pg.getImageData(0,0,sw,sh).data,gray=new Uint8Array(sw*sh),rowInk=new Float32Array(sh);
- for(let y=0,p=0;y<sh;y++)for(let x=0;x<sw;x++,p++){
-  const i=p*4,v=.299*pixels[i]+.587*pixels[i+1]+.114*pixels[i+2];gray[p]=v;
-  if(v<170)rowInk[y]++;
+ const rgba=pg.getImageData(0,0,sw,sh).data,gray=new Uint8Array(sw*sh),rowRuns=new Float32Array(sh);
+ for(let y=0,p=0;y<sh;y++){
+  let prevDark=false,runs=0;
+  for(let x=0;x<sw;x++,p++){
+   const i=p*4,v=Math.round(.299*rgba[i]+.587*rgba[i+1]+.114*rgba[i+2]);gray[p]=v;
+   // Count starts of ink strokes rather than total dark pixels: long table rules
+   // and vertical borders are less likely to masquerade as text rows.
+   const dark=v<172;
+   if(dark&&!prevDark)runs++;
+   prevDark=dark;
+  }
+  rowRuns[y]=runs;
  }
- function smooth1(a,r){const out=new Float32Array(a.length);for(let i=0;i<a.length;i++){let s=0,n=0;for(let j=Math.max(0,i-r);j<=Math.min(a.length-1,i+r);j++){s+=a[j];n++}out[i]=s/n}return out}
- const proj=smooth1(rowInk,2),peak=Math.max(...proj),threshold=Math.max(2,sw*.004);
- if(peak<threshold*1.7)return {ok:false,message:'Belum ditemukan baris teks yang cukup jelas. Coba foto dokumen yang lebih tajam.'};
- const bands=[];let start=-1,last=-1;
- for(let y=0;y<sh;y++){if(proj[y]>=threshold){if(start<0)start=y;last=y}else if(start>=0&&y-last>3){if(last-start>=1)bands.push([start,last]);start=-1}}
+ const smooth=(arr,r)=>{const out=new Float32Array(arr.length);for(let i=0;i<arr.length;i++){let sum=0,n=0;for(let j=Math.max(0,i-r);j<=Math.min(arr.length-1,i+r);j++){sum+=arr[j];n++}out[i]=sum/n}return out};
+ const signal=smooth(rowRuns,1),threshold=Math.max(10,sw*.018),bands=[];
+ let start=-1,last=-1;
+ for(let y=0;y<sh;y++){
+  if(signal[y]>=threshold){if(start<0)start=y;last=y}
+  else if(start>=0&&y-last>2){if(last-start>=1)bands.push([start,last]);start=-1}
+ }
  if(start>=0&&last-start>=1)bands.push([start,last]);
- const usable=bands.filter(([a,b])=>b-a<Math.max(24,sh*.045)&&a>sh*.015&&b<sh*.985);
- if(usable.length<3)return {ok:false,message:'Teks terlalu sedikit untuk memperkirakan lengkungan dengan aman.'};
- const bins=36,step=sw/bins,bandData=[];
- for(const [y0,y1] of usable){
+ const lineBands=bands.filter(([y0,y1])=>(y1-y0)<=Math.max(26,sh*.055)&&y0>sh*.008&&y1<sh*.992);
+ if(lineBands.length<3)return {ok:false,message:'Baris teks belum cukup jelas untuk menghitung lengkungan. Coba crop halaman lebih rapat dan gunakan foto yang tajam.'};
+ const bins=48,binW=sw/bins,profiles=[];
+ for(const [y0,y1] of lineBands){
   const ys=new Float32Array(bins);ys.fill(NaN);let valid=0;
   for(let bx=0;bx<bins;bx++){
-   const xa=Math.floor(bx*step),xb=Math.min(sw,Math.ceil((bx+1)*step));let bottom=-1,count=0;
-   for(let y=y0;y<=y1;y++)for(let x=xa;x<xb;x++)if(gray[y*sw+x]<145){bottom=y;count++}
-   if(count>=2&&bottom>=0){ys[bx]=bottom;valid++}
+   const xa=Math.floor(bx*binW),xb=Math.min(sw,Math.ceil((bx+1)*binW));
+   let weight=0,weightedY=0,ink=0;
+   for(let y=y0;y<=y1;y++)for(let x=xa;x<xb;x++){
+    const v=gray[y*sw+x];
+    if(v<172){const wt=172-v;weight+=wt;weightedY+=y*wt;ink++}
+   }
+   if(ink>=2&&weight>20){ys[bx]=weightedY/weight;valid++}
   }
-  if(valid>=Math.ceil(bins*.42))bandData.push(ys);
- }
- if(bandData.length<3)return {ok:false,message:'Baris teks tidak cukup konsisten untuk koreksi lengkungan.'};
- const offsets=new Float32Array(bins),support=new Uint8Array(bins);
- for(const ys of bandData){
+  if(valid<Math.ceil(bins*.48))continue;
+  // Fit and remove straight-line tilt; retain only the curved residual.
   let sx=0,sy=0,sxx=0,sxy=0,n=0;
   for(let i=0;i<bins;i++)if(Number.isFinite(ys[i])){const x=i/(bins-1);sx+=x;sy+=ys[i];sxx+=x*x;sxy+=x*ys[i];n++}
-  const den=n*sxx-sx*sx;if(Math.abs(den)<1e-6)continue;
-  const a=(n*sxy-sx*sy)/den,b=(sy-a*sx)/n;
-  for(let i=0;i<bins;i++)if(Number.isFinite(ys[i])){offsets[i]+=ys[i]-(a*(i/(bins-1))+b);support[i]++}
+  const den=n*sxx-sx*sx;if(n<3||Math.abs(den)<1e-6)continue;
+  const slope=(n*sxy-sx*sy)/den,intercept=(sy-slope*sx)/n,curve=new Float32Array(bins);
+  let mean=0,count=0;
+  for(let i=0;i<bins;i++)if(Number.isFinite(ys[i])){curve[i]=ys[i]-(slope*(i/(bins-1))+intercept);mean+=curve[i];count++}
+  if(!count)continue;mean/=count;
+  for(let i=0;i<bins;i++)curve[i]=Number.isFinite(ys[i])?curve[i]-mean:0;
+  const filled=new Float32Array(bins);let lastGood=-1;
+  for(let i=0;i<bins;i++){
+   if(Number.isFinite(ys[i])){filled[i]=curve[i];if(lastGood<0){for(let j=0;j<i;j++)filled[j]=curve[i]}else if(i-lastGood>1){for(let j=lastGood+1;j<i;j++){const t=(j-lastGood)/(i-lastGood);filled[j]=filled[lastGood]*(1-t)+curve[i]*t}}lastGood=i}
+   else filled[i]=lastGood>=0?filled[lastGood]:0;
+  }
+  if(lastGood>=0)for(let j=lastGood+1;j<bins;j++)filled[j]=filled[lastGood];
+  const filtered=smooth(filled,2),limit=sh*.03;
+  for(let i=0;i<bins;i++)filtered[i]=Math.max(-limit,Math.min(limit,filtered[i]));
+  const magnitude=Math.max(...filtered)-Math.min(...filtered);
+  if(magnitude>=sh*.0015)profiles.push({y:(y0+y1)/2,curve:filtered});
  }
- for(let i=0;i<bins;i++)offsets[i]=support[i]?offsets[i]/support[i]:0;
- const sm=smooth1(offsets,3),limit=sh*.025;
- for(let i=0;i<bins;i++)sm[i]=Math.max(-limit,Math.min(limit,sm[i]));
- const magnitude=Math.max(...sm)-Math.min(...sm);
- if(magnitude<sh*.004)return {ok:false,message:'Lengkungan tidak cukup kuat terdeteksi. Foto tidak diubah.'};
- const srcW=image.naturalWidth,srcH=image.naturalHeight,out=document.createElement('canvas');out.width=srcW;out.height=srcH;
- const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(image,0,0,srcW,srcH);
- const src=oc.getImageData(0,0,srcW,srcH),dst=oc.createImageData(srcW,srcH),sdata=src.data,ddata=dst.data,syScale=sh/srcH,sxScale=sw/srcW;
- for(let y=0;y<srcH;y++)for(let x=0;x<srcW;x++){
-  const bx=Math.min(bins-1,Math.max(0,(x*sxScale/step))),i0=Math.floor(bx),i1=Math.min(bins-1,i0+1),f=bx-i0;
-  const delta=(sm[i0]*(1-f)+sm[i1]*f)/syScale,sy=Math.max(0,Math.min(srcH-1,Math.round(y+delta)));
-  const si=(sy*srcW+x)*4,di=(y*srcW+x)*4;
-  ddata[di]=sdata[si];ddata[di+1]=sdata[si+1];ddata[di+2]=sdata[si+2];ddata[di+3]=sdata[si+3];
+ if(profiles.length<3)return {ok:false,message:'Lengkungan baris teks belum cukup konsisten. Foto tidak diubah agar tulisan tetap aman.'};
+ profiles.sort((a,b)=>a.y-b.y);
+ // Reduce noisy line estimates by smoothing between neighboring line profiles.
+ const maxDim=2600,outScale=Math.min(1,maxDim/Math.max(image.naturalWidth,image.naturalHeight));
+ const outW=Math.max(1,Math.round(image.naturalWidth*outScale)),outH=Math.max(1,Math.round(image.naturalHeight*outScale));
+ const out=document.createElement('canvas');out.width=outW;out.height=outH;
+ const oc=out.getContext('2d',{willReadFrequently:true});oc.drawImage(image,0,0,outW,outH);
+ const src=oc.getImageData(0,0,outW,outH),dst=oc.createImageData(outW,outH),sd=src.data,dd=dst.data;
+ const sampleCurve=(profile,x)=>{const bx=Math.max(0,Math.min(bins-1,x*(bins-1))),i=Math.floor(bx),j=Math.min(bins-1,i+1),t=bx-i;return profile.curve[i]*(1-t)+profile.curve[j]*t};
+ const analysisToOut=outH/sh;
+ for(let y=0;y<outH;y++){
+  const ay=y/analysisToOut;
+  let hi=profiles.findIndex(p=>p.y>=ay),lo;
+  if(hi<0){hi=profiles.length-1;lo=hi}else if(hi===0)lo=0;else lo=hi-1;
+  const upper=profiles[hi],lower=profiles[lo],t=hi===lo?0:Math.max(0,Math.min(1,(ay-lower.y)/(upper.y-lower.y)));
+  for(let x=0;x<outW;x++){
+   const xn=x/Math.max(1,outW-1),curve=sampleCurve(lower,xn)*(1-t)+sampleCurve(upper,xn)*t;
+   const sy=Math.max(0,Math.min(outH-1,y+curve*analysisToOut)),y0=Math.floor(sy),y1=Math.min(outH-1,y0+1),fy=sy-y0;
+   const si0=(y0*outW+x)*4,si1=(y1*outW+x)*4,di=(y*outW+x)*4;
+   for(let ch=0;ch<4;ch++)dd[di+ch]=sd[si0+ch]*(1-fy)+sd[si1+ch]*fy;
+  }
  }
  oc.putImageData(dst,0,0);
- return {ok:true,data:out.toDataURL('image/jpeg',.97),lines:bandData.length};
+ return {ok:true,data:out.toDataURL('image/jpeg',.98),lines:profiles.length};
 }
 
 function detectQuadHeuristic(source){

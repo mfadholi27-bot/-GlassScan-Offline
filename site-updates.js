@@ -1,9 +1,16 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V1.9.8 · GS-198',
-  updatedAt: '29 Oktober 2026, 00:30 WIB',
+  version: 'V2.0.1 · GS-201',
+  updatedAt: '29 Oktober 2026, 13:45 WIB',
   changes: [
+   'GS-201: perataan halaman buku memperkirakan profil lengkungan untuk setiap baris teks lalu menginterpolasikannya secara vertikal sebagai mesh 2D.',
+   'GS-201: deteksi baris menghitung awal goresan tinta, bukan hanya jumlah piksel gelap, agar garis tabel panjang lebih kecil kemungkinannya dianggap sebagai teks.',
+   'GS-201: pemrosesan dibatasi pada sisi terpanjang 2600 piksel dan tetap menolak koreksi bila profil lengkungan tidak konsisten; wajib diperiksa sebelum ekspor.',
+   'GS-200: memperbaiki deteksi baris teks pada formulir bertabel dengan mengabaikan kepadatan piksel rendah dari garis vertikal, agar tabel tidak terbaca sebagai satu blok teks.',
+   'GS-200: ambang proyeksi dan pemisahan baris disesuaikan; foto tidak diubah bila baris teks tetap tidak cukup meyakinkan.',
+   'GS-199: perataan baris teks menggunakan interpolasi vertikal bilinear untuk mengurangi tepi huruf bergerigi setelah koreksi.',
+   'GS-199: pemrosesan tetap lokal; bila deteksi baris teks tidak cukup meyakinkan, gambar tidak diubah dan foto asli dapat dipulihkan.',
    'GS-198: prototipe Ratakan Kertas lokal berbasis analisis geometri baris teks; tidak mengirim foto ke server dan menyediakan pemulihan foto asli.',
    'GS-198: koreksi dibatasi dan hanya diterapkan bila cukup banyak baris teks konsisten; bukan model neural dewarping CamScanner dan perlu uji foto nyata.',
    'GS-197: deteksi sudut OpenCV memakai beberapa tingkat Canny agar lebih tahan terhadap kontras dan latar yang berbeda.',
@@ -49,7 +56,7 @@
    'Panel pemeriksaan kualitas foto ditambahkan: indikasi ketajaman, pencahayaan, area gelap, dan sorotan terang.',
    'Cache aplikasi diperbarui untuk memuat aset versi baru. OpenCV.js dicache setelah pemasangan online agar peluncuran berikutnya dapat bekerja offline.'
   ],
-  note: 'Deteksi sudut AI memerlukan koneksi internet saat pertama kali memuat library/runtime/model; aset CDN dicache saat berhasil, tetapi mode offline berikutnya tetap harus diuji pada perangkat dan browser yang digunakan. Empat model AI untuk penghilang bayangan, dewarping halaman, dan pemulihan teks belum terintegrasi. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
+  note: 'GS-199 meningkatkan interpolasi piksel, bukan rekonstruksi 3D. Periksa huruf kecil, garis tabel, tanda tangan, dan stempel sebelum ekspor. Deteksi sudut AI memerlukan koneksi internet saat pertama kali memuat library/runtime/model; aset CDN dicache saat berhasil, tetapi mode offline berikutnya tetap harus diuji pada perangkat dan browser yang digunakan. Empat model AI untuk penghilang bayangan, dewarping halaman, dan pemulihan teks belum terintegrasi. Pemotongan awal mengikuti bingkai tetap. Koreksi perspektif otomatis hanya diterapkan saat kontur buku lolos pemeriksaan heuristik; bila ragu, hasil crop bingkai dipertahankan dan pengguna dapat mengatur empat sudut manual. Skor kualitas bersifat indikatif. Cache OpenCV offline memerlukan satu kali pemasangan/pemuatan online yang berhasil. Instalasi pertama tanpa jaringan tetap tidak dijamin; pengujian langsung di iPhone/Android masih diperlukan sebelum rilis final.'
  };
  function addPanel() {
   if (document.getElementById('gsReleaseStamp')) return;
