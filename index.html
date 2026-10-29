@@ -87,11 +87,12 @@ document.addEventListener('DOMContentLoaded',function(){
 <footer>• Pemrosesan scan lokal · Analisis ChatGPT memerlukan internet dan persetujuan <small>GlassScan GS-188 - Riwayat perubahan tersedia di atas footer</small></footer>
 </main>
 <dialog id="helpDialog" class="dialog glass"><button id="closeHelp" class="dialog-x">X</button><small>GlassScan v1.6</small><h2>Petunjuk iPhone</h2><ol><li>Buka situs GlassScan melalui Safari.</li><li>Pilih Bagikan -> Tambahkan ke Layar Utama.</li><li>Buka sekali saat online agar aset aplikasi tersimpan.</li><li>Uji mode pesawat untuk memeriksa penggunaan offline.</li></ol><p class="note">Smart Image Lab adalah pemrosesan citra lokal eksperimental, bukan model AI terlatih. OCR menggunakan runtime dan model lokal yang disediakan bersama aplikasi. Periksa hasil sebelum digunakan.</p></dialog>
-<dialog id="cropDialog" class="dialog glass crop-dialog"><button id="cropClose" class="dialog-x" aria-label="Tutup">X</button><small>MANUAL DOCUMENT ALIGNMENT</small><h2>Atur empat sudut dengan presisi</h2><p class="crop-help">Geser titik ke tepi kertas. Kaca pembesar mengikuti jari agar titik tetap terlihat. Periksa semua sudut sebelum menekan Terapkan.</p><div class="crop-stage"><canvas id="cropCanvas"></canvas></div><div class="crop-actions"><button id="cropAuto" class="secondary">Coba deteksi otomatis</button><button id="cropReset" class="secondary">Reset sudut</button><button id="cropApply" class="export-btn">Terapkan crop</button></div></dialog>
+<dialog id="cropDialog" class="dialog glass crop-dialog"><button id="cropClose" class="dialog-x" aria-label="Tutup">X</button><small>MANUAL DOCUMENT ALIGNMENT</small><h2>Atur empat sudut dengan presisi</h2><p class="crop-help">Geser titik ke tepi kertas. Kaca pembesar mengikuti jari agar titik tetap terlihat. Periksa semua sudut sebelum menekan Terapkan.</p><div class="crop-stage"><canvas id="cropCanvas"></canvas></div><div class="crop-actions"><button id="cropAuto" class="secondary">Coba deteksi otomatis</button><button id="fairscanAuto" class="secondary">FairScan · segmentasi AI</button><button id="cropReset" class="secondary">Reset sudut</button><button id="cropApply" class="export-btn">Terapkan crop</button></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <script async src="https://docs.opencv.org/4.13.0/opencv.js" id="opencvScript"></script>
 <script src="app.js"></script>
 <script src="ai-corner.js"></script>
+<script src="fairscan-segmentation.js"></script>
 <script src="ai-tools.js"></script>
 <script src="vendor/tesseract/tesseract.min.js"></script>
 <script src="local-ai.js"></script>
