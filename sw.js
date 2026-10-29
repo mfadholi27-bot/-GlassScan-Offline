@@ -1,9 +1,9 @@
 /* GlassScan V2.0.1 GS-201 book dewarp mesh cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v205-minimalism-qa-cache';
+const CACHE_NAME = 'glassscan-v206-fairscan-tflite-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-corner.js','./ai-tools.js','./local-ai.js',
- './site-updates.js','./ui-polish.js','./offline-readiness.js','./fairscan-qa.js','./manifest.webmanifest',
+ './site-updates.js','./ui-polish.js','./offline-readiness.js','./fairscan-qa.js','./fairscan-segmentation.js','./manifest.webmanifest',
  './vendor/tesseract/tesseract.min.js','./vendor/tesseract/worker.min.js',
  './vendor/tesseract-core/tesseract-core.wasm.js','./vendor/tesseract-core/tesseract-core.wasm',
  './vendor/tesseract-core/tesseract-core-simd.wasm.js','./vendor/tesseract-core/tesseract-core-simd.wasm',
@@ -48,7 +48,8 @@ self.addEventListener('fetch', event => {
  const url = new URL(request.url);
  const isOpenCV = url.href === OPENCV_URL;
  const isQuadscanAsset = url.origin === 'https://cdn.jsdelivr.net' && (url.pathname.includes('/npm/quadscan@1.0.0/') || url.pathname.includes('/npm/onnxruntime-web@1.20.1/'));
- if (url.origin !== self.location.origin && !isOpenCV && !isQuadscanAsset) return;
+ const isFairScanAsset = (url.origin === 'https://cdn.jsdelivr.net' && (url.pathname.includes('/npm/@tensorflow/tfjs@4.22.0/') || url.pathname.includes('/npm/@tensorflow/tfjs-tflite@0.0.1/'))) || (url.origin === 'https://github.com' && url.pathname.includes('/pynicolas/fairscan-segmentation-model/releases/download/')) || url.origin === 'https://objects.githubusercontent.com';
+ if (url.origin !== self.location.origin && !isOpenCV && !isQuadscanAsset && !isFairScanAsset) return;
  event.respondWith((async () => {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request, {ignoreSearch:true}) || (isOpenCV ? await cache.match(OPENCV_URL) : null);
