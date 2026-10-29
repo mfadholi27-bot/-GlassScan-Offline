@@ -4,7 +4,9 @@
   version: 'V2.0.9 · GS-209',
   updatedAt: '29 Oktober 2026',
   changes: [
-   'GS-209: menambahkan tindakan Siapkan AI offline untuk memuat runtime/model FairScan secara eksplisit dan memeriksa cache model; kesiapan offline tetap perlu diuji setelah mode pesawat.',\n   'GS-209: memasukkan sw.js ke daftar aset inti cache agar pemeriksaan file inti tidak salah melaporkan berkas service worker hilang.',\n   'GS-208: memperbaiki koneksi tombol FairScan ke editor crop melalui API jembatan yang eksplisit; sebelumnya status crop berada di dalam scope privat app.js.',
+   'GS-209: menambahkan tindakan Siapkan AI offline untuk memuat runtime/model FairScan secara eksplisit dan memeriksa cache model; kesiapan offline tetap perlu diuji setelah mode pesawat.',
+   'GS-209: memasukkan sw.js ke daftar aset inti cache agar pemeriksaan file inti tidak salah melaporkan berkas service worker hilang.',
+   'GS-208: memperbaiki koneksi tombol FairScan ke editor crop melalui API jembatan yang eksplisit; sebelumnya status crop berada di dalam scope privat app.js.',
    'GS-208: menu Image Enhance Scan dipindahkan ke bawah Document Preview dan baru tampil setelah gambar berhasil dimuat.',
    'GS-208: cache service worker diperbarui untuk memuat perbaikan terbaru.',
    'GS-206: menambahkan integrasi browser eksperimental FairScan TFLite untuk segmentasi area kertas dan estimasi empat sudut; model/runtime dimuat saat diperlukan dan dicache setelah berhasil.',
