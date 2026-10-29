@@ -1,9 +1,12 @@
 /* GlassScan release stamp + changelog. Update this file for every release. */
 (() => {
  const RELEASE = {
-  version: 'V2.0.0 · GS-200',
-  updatedAt: '29 Oktober 2026, 13:30 WIB',
+  version: 'V2.0.1 · GS-201',
+  updatedAt: '29 Oktober 2026, 13:45 WIB',
   changes: [
+   'GS-201: perataan halaman buku memperkirakan profil lengkungan untuk setiap baris teks lalu menginterpolasikannya secara vertikal sebagai mesh 2D.',
+   'GS-201: deteksi baris menghitung awal goresan tinta, bukan hanya jumlah piksel gelap, agar garis tabel panjang lebih kecil kemungkinannya dianggap sebagai teks.',
+   'GS-201: pemrosesan dibatasi pada sisi terpanjang 2600 piksel dan tetap menolak koreksi bila profil lengkungan tidak konsisten; wajib diperiksa sebelum ekspor.',
    'GS-200: memperbaiki deteksi baris teks pada formulir bertabel dengan mengabaikan kepadatan piksel rendah dari garis vertikal, agar tabel tidak terbaca sebagai satu blok teks.',
    'GS-200: ambang proyeksi dan pemisahan baris disesuaikan; foto tidak diubah bila baris teks tetap tidak cukup meyakinkan.',
    'GS-199: perataan baris teks menggunakan interpolasi vertikal bilinear untuk mengurangi tepi huruf bergerigi setelah koreksi.',
