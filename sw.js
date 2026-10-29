@@ -1,5 +1,5 @@
-/* GlassScan V1.9.9 dewarp bilinear cache. Keep in repository root. */
-const CACHE_NAME = 'glassscan-v200-ruled-table-dewarp-cache';
+/* GlassScan V2.0.1 GS-201 book dewarp mesh cache. Keep in repository root. */
+const CACHE_NAME = 'glassscan-v201-book-dewarp-mesh-cache';
 const OPENCV_URL = 'https://docs.opencv.org/4.13.0/opencv.js';
 const APP_ASSETS = [
  './','./index.html','./styles.css','./app.js','./ai-corner.js','./ai-tools.js','./local-ai.js',
